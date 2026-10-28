@@ -1,0 +1,645 @@
+{
+  "version": 1,
+  "packs": [
+    {
+      "id": "small-talk",
+      "title": "Знакомства и разговор",
+      "description": "Лёгкий разговор с новым знакомым: знакомство, вопросы, впечатления и общие интересы.",
+      "level": "A2–B1",
+      "phrases": [
+        {
+          "ru": "Привет, рад познакомиться.",
+          "en": "Hi, nice to meet you."
+        },
+        {
+          "ru": "Как тебя зовут?",
+          "en": "What's your name?"
+        },
+        {
+          "ru": "Откуда ты?",
+          "en": "Where are you from?"
+        },
+        {
+          "ru": "Я сейчас живу в Португалии.",
+          "en": "I'm living in Portugal at the moment."
+        },
+        {
+          "ru": "Ты здесь впервые?",
+          "en": "Is this your first time here?"
+        },
+        {
+          "ru": "Как давно ты здесь?",
+          "en": "How long have you been here?"
+        },
+        {
+          "ru": "Чем ты обычно занимаешься?",
+          "en": "What do you usually do?"
+        },
+        {
+          "ru": "Раньше я преподавал в университете.",
+          "en": "I used to teach at a university."
+        },
+        {
+          "ru": "Что привело тебя сюда?",
+          "en": "What brought you here?"
+        },
+        {
+          "ru": "Как тебе здесь нравится?",
+          "en": "How do you like it here?"
+        },
+        {
+          "ru": "Мы познакомились вчера.",
+          "en": "We met yesterday."
+        },
+        {
+          "ru": "Давно этим занимаешься?",
+          "en": "Have you been doing this for long?"
+        },
+        {
+          "ru": "Звучит интересно.",
+          "en": "That sounds interesting."
+        },
+        {
+          "ru": "Расскажи мне об этом подробнее.",
+          "en": "Tell me more about it."
+        },
+        {
+          "ru": "У нас много общего.",
+          "en": "We have a lot in common."
+        },
+        {
+          "ru": "Было приятно пообщаться.",
+          "en": "It was nice talking to you."
+        },
+        {
+          "ru": "Может, увидимся завтра?",
+          "en": "Maybe we'll see each other tomorrow."
+        },
+        {
+          "ru": "Давай оставаться на связи.",
+          "en": "Let's keep in touch."
+        }
+      ]
+    },
+    {
+      "id": "daily-life",
+      "title": "Повседневные дела",
+      "description": "Короткие фразы о своём дне, планах, времени и бытовых ситуациях.",
+      "level": "A2–B1",
+      "phrases": [
+        {
+          "ru": "Сегодня я проснулся раньше обычного.",
+          "en": "I woke up earlier than usual today."
+        },
+        {
+          "ru": "Я ещё не завтракал.",
+          "en": "I haven't had breakfast yet."
+        },
+        {
+          "ru": "У меня сегодня много дел.",
+          "en": "I've got a lot to do today."
+        },
+        {
+          "ru": "Сначала мне нужно закончить работу.",
+          "en": "I need to finish my work first."
+        },
+        {
+          "ru": "Я собираюсь выйти через десять минут.",
+          "en": "I'm going to leave in ten minutes."
+        },
+        {
+          "ru": "Я забыл зарядить телефон.",
+          "en": "I forgot to charge my phone."
+        },
+        {
+          "ru": "Мне нужно купить продукты.",
+          "en": "I need to get some groceries."
+        },
+        {
+          "ru": "Я был занят весь день.",
+          "en": "I've been busy all day."
+        },
+        {
+          "ru": "У меня наконец появилось немного свободного времени.",
+          "en": "I've finally got some free time."
+        },
+        {
+          "ru": "Давай отложим это на завтра.",
+          "en": "Let's put this off until tomorrow."
+        },
+        {
+          "ru": "Я немного опаздываю.",
+          "en": "I'm running a little late."
+        },
+        {
+          "ru": "Не торопись, у нас есть время.",
+          "en": "Take your time, we've got time."
+        },
+        {
+          "ru": "Сейчас я не могу говорить.",
+          "en": "I can't talk right now."
+        },
+        {
+          "ru": "Я перезвоню тебе позже.",
+          "en": "I'll call you back later."
+        },
+        {
+          "ru": "У меня закончился мобильный интернет.",
+          "en": "I've run out of mobile data."
+        },
+        {
+          "ru": "Я уже сделал большую часть работы.",
+          "en": "I've already done most of the work."
+        },
+        {
+          "ru": "Не забудь взять ключи.",
+          "en": "Don't forget to take your keys."
+        },
+        {
+          "ru": "Надеюсь, завтра будет легче.",
+          "en": "I hope tomorrow will be easier."
+        }
+      ]
+    },
+    {
+      "id": "clarifying",
+      "title": "Объяснять и уточнять",
+      "description": "Переспрашивать, формулировать аргументы, уточнять детали и обсуждать решения.",
+      "level": "B1–B2",
+      "phrases": [
+        {
+          "ru": "Я не совсем понял, что ты имеешь в виду.",
+          "en": "I'm not quite sure what you mean."
+        },
+        {
+          "ru": "Можешь объяснить это другими словами?",
+          "en": "Could you put that another way?"
+        },
+        {
+          "ru": "Правильно ли я тебя понял?",
+          "en": "Have I understood you correctly?"
+        },
+        {
+          "ru": "Приведи, пожалуйста, пример.",
+          "en": "Could you give me an example?"
+        },
+        {
+          "ru": "В чём основная идея?",
+          "en": "What's the main idea?"
+        },
+        {
+          "ru": "Почему ты так думаешь?",
+          "en": "What makes you think that?"
+        },
+        {
+          "ru": "Какой именно вариант ты предлагаешь?",
+          "en": "Which option exactly are you suggesting?"
+        },
+        {
+          "ru": "Давай сравним оба варианта.",
+          "en": "Let's compare both options."
+        },
+        {
+          "ru": "Это зависит от обстоятельств.",
+          "en": "It depends on the situation."
+        },
+        {
+          "ru": "Я вижу, к чему ты клонишь.",
+          "en": "I see what you're getting at."
+        },
+        {
+          "ru": "Возможно, я ошибаюсь.",
+          "en": "I might be wrong."
+        },
+        {
+          "ru": "Здесь есть одно важное различие.",
+          "en": "There's one important difference here."
+        },
+        {
+          "ru": "Я бы сформулировал это немного иначе.",
+          "en": "I'd put it a little differently."
+        },
+        {
+          "ru": "Можем вернуться к этому вопросу?",
+          "en": "Can we come back to that?"
+        },
+        {
+          "ru": "Что мы пытаемся решить?",
+          "en": "What are we trying to solve?"
+        },
+        {
+          "ru": "Давай начнём с простого примера.",
+          "en": "Let's start with a simple example."
+        },
+        {
+          "ru": "Теперь мне стало понятнее.",
+          "en": "That makes more sense now."
+        },
+        {
+          "ru": "Кажется, мы говорим об одном и том же.",
+          "en": "I think we're on the same page."
+        }
+      ]
+    },
+    {
+      "id": "travel",
+      "title": "Путешествия и кафе",
+      "description": "Заказать еду, найти дорогу, заселиться в гостиницу и решать обычные вопросы в поездке.",
+      "level": "A2–B1",
+      "phrases": [
+        {
+          "ru": "Можно меню, пожалуйста?",
+          "en": "Could I see the menu, please?"
+        },
+        {
+          "ru": "Что вы порекомендуете?",
+          "en": "What would you recommend?"
+        },
+        {
+          "ru": "Это блюдо острое?",
+          "en": "Is this dish spicy?"
+        },
+        {
+          "ru": "Можно без лука?",
+          "en": "Could I have it without onions?"
+        },
+        {
+          "ru": "Можно оплатить картой?",
+          "en": "Can I pay by card?"
+        },
+        {
+          "ru": "Можно счёт, пожалуйста?",
+          "en": "Could we have the bill, please?"
+        },
+        {
+          "ru": "Здесь есть Wi-Fi?",
+          "en": "Is there Wi-Fi here?"
+        },
+        {
+          "ru": "Где ближайший банкомат?",
+          "en": "Where's the nearest ATM?"
+        },
+        {
+          "ru": "Как добраться до вокзала?",
+          "en": "How do I get to the train station?"
+        },
+        {
+          "ru": "Сколько времени это займёт пешком?",
+          "en": "How long does it take to walk there?"
+        },
+        {
+          "ru": "Я ищу автобусную остановку.",
+          "en": "I'm looking for the bus stop."
+        },
+        {
+          "ru": "Во сколько отправляется следующий автобус?",
+          "en": "What time does the next bus leave?"
+        },
+        {
+          "ru": "У меня бронь на две ночи.",
+          "en": "I have a reservation for two nights."
+        },
+        {
+          "ru": "Могу я оставить здесь багаж?",
+          "en": "Can I leave my luggage here?"
+        },
+        {
+          "ru": "В номере не работает кондиционер.",
+          "en": "The air conditioning in my room isn't working."
+        },
+        {
+          "ru": "Мне нужен чек, пожалуйста.",
+          "en": "Could I have a receipt, please?"
+        },
+        {
+          "ru": "Это включает завтрак?",
+          "en": "Does that include breakfast?"
+        },
+        {
+          "ru": "Мы можем сесть на улице?",
+          "en": "Could we sit outside?"
+        }
+      ]
+    },
+    {
+      "id": "surfing",
+      "title": "Сёрфинг и океан",
+      "description": "Поговорить с инструктором, выбрать доску и объяснить, что происходит на волне.",
+      "level": "A2–B1",
+      "phrases": [
+        {
+          "ru": "Я только учусь серфингу.",
+          "en": "I'm just learning to surf."
+        },
+        {
+          "ru": "Можно мне доску побольше?",
+          "en": "Could I have a bigger board?"
+        },
+        {
+          "ru": "Мне нужна доска с большим объёмом.",
+          "en": "I need a board with more volume."
+        },
+        {
+          "ru": "Сегодня волны слишком сильные для меня.",
+          "en": "The waves are too powerful for me today."
+        },
+        {
+          "ru": "Лучше зайти в воду с этой стороны?",
+          "en": "Is it better to enter the water from this side?"
+        },
+        {
+          "ru": "Здесь есть сильное течение?",
+          "en": "Is there a strong current here?"
+        },
+        {
+          "ru": "Где безопаснее всего начинать?",
+          "en": "Where's the safest place to start?"
+        },
+        {
+          "ru": "Я пытаюсь поймать пену.",
+          "en": "I'm trying to catch the whitewater."
+        },
+        {
+          "ru": "Мне трудно догрести до места.",
+          "en": "I'm struggling to paddle out."
+        },
+        {
+          "ru": "Я устаю ещё до того, как добираюсь до волн.",
+          "en": "I get tired before I even reach the waves."
+        },
+        {
+          "ru": "Кажется, эта доска слишком маленькая для меня.",
+          "en": "I think this board is too small for me."
+        },
+        {
+          "ru": "Мне трудно держать равновесие.",
+          "en": "I'm having trouble keeping my balance."
+        },
+        {
+          "ru": "Мне нужно начинать грести раньше.",
+          "en": "I need to start paddling earlier."
+        },
+        {
+          "ru": "Когда лучше вставать на доску?",
+          "en": "When should I pop up?"
+        },
+        {
+          "ru": "Можешь показать мне ещё раз?",
+          "en": "Could you show me one more time?"
+        },
+        {
+          "ru": "Давай попробуем на более спокойных волнах.",
+          "en": "Let's try some smaller waves."
+        },
+        {
+          "ru": "Сегодня я поймал свою первую волну.",
+          "en": "I caught my first wave today."
+        },
+        {
+          "ru": "Думаю, мне нужно больше практики.",
+          "en": "I think I need more practice."
+        }
+      ]
+    },
+    {
+      "id": "technology",
+      "title": "Работа и технологии",
+      "description": "Обсуждать задачи, ошибки, версии, проверки и технические решения на английском.",
+      "level": "B1–B2",
+      "phrases": [
+        {
+          "ru": "Я работаю над небольшим приложением.",
+          "en": "I'm working on a small app."
+        },
+        {
+          "ru": "Сначала нам нужно проверить гипотезу.",
+          "en": "We need to test the hypothesis first."
+        },
+        {
+          "ru": "Я нашёл ошибку в последней версии.",
+          "en": "I found a bug in the latest version."
+        },
+        {
+          "ru": "Проблема возникает только на Android.",
+          "en": "The issue only happens on Android."
+        },
+        {
+          "ru": "Давай воспроизведём ошибку.",
+          "en": "Let's reproduce the bug."
+        },
+        {
+          "ru": "Я пока не понимаю причину.",
+          "en": "I don't understand the cause yet."
+        },
+        {
+          "ru": "У нас есть рабочая версия.",
+          "en": "We have a working version."
+        },
+        {
+          "ru": "Это изменение не должно затрагивать старые данные.",
+          "en": "This change shouldn't affect existing data."
+        },
+        {
+          "ru": "Сохрани резервную копию перед обновлением.",
+          "en": "Make a backup before updating."
+        },
+        {
+          "ru": "Тесты проходят локально.",
+          "en": "The tests pass locally."
+        },
+        {
+          "ru": "Я хочу сравнить два подхода.",
+          "en": "I want to compare two approaches."
+        },
+        {
+          "ru": "Это решение слишком сложное для такой задачи.",
+          "en": "This solution is too complicated for this task."
+        },
+        {
+          "ru": "Давай сначала сделаем простой прототип.",
+          "en": "Let's build a simple prototype first."
+        },
+        {
+          "ru": "Нам нужна возможность работать без интернета.",
+          "en": "We need to be able to work offline."
+        },
+        {
+          "ru": "Этот результат нужно проверить независимо.",
+          "en": "We need to verify this result independently."
+        },
+        {
+          "ru": "Что произойдёт, если соединение пропадёт?",
+          "en": "What happens if the connection drops?"
+        },
+        {
+          "ru": "Мы можем автоматизировать этот процесс.",
+          "en": "We can automate this process."
+        },
+        {
+          "ru": "Давай запишем решение в GitHub.",
+          "en": "Let's document the decision on GitHub."
+        }
+      ]
+    },
+    {
+      "id": "teaching",
+      "title": "Математика и физика",
+      "description": "Объяснять задачи, рассуждения, доказательства и научные идеи.",
+      "level": "B1–B2",
+      "phrases": [
+        {
+          "ru": "Раньше я преподавал математику и физику.",
+          "en": "I used to teach mathematics and physics."
+        },
+        {
+          "ru": "Сначала разберём простой случай.",
+          "en": "Let's look at a simple case first."
+        },
+        {
+          "ru": "Попробуй решить задачу самостоятельно.",
+          "en": "Try to solve the problem on your own."
+        },
+        {
+          "ru": "Что известно из условия?",
+          "en": "What information are we given?"
+        },
+        {
+          "ru": "Какие предположения мы делаем?",
+          "en": "What assumptions are we making?"
+        },
+        {
+          "ru": "Давай нарисуем схему.",
+          "en": "Let's draw a diagram."
+        },
+        {
+          "ru": "Это можно доказать от противного.",
+          "en": "We can prove this by contradiction."
+        },
+        {
+          "ru": "Нам нужно найти закономерность.",
+          "en": "We need to find a pattern."
+        },
+        {
+          "ru": "Не путай необходимое условие с достаточным.",
+          "en": "Don't confuse a necessary condition with a sufficient one."
+        },
+        {
+          "ru": "Этот вывод не следует из предположения.",
+          "en": "That conclusion doesn't follow from the assumption."
+        },
+        {
+          "ru": "Попробуй объяснить своими словами.",
+          "en": "Try to explain it in your own words."
+        },
+        {
+          "ru": "Почему это верно для любого числа?",
+          "en": "Why does this hold for every number?"
+        },
+        {
+          "ru": "Мы можем проверить это на примере.",
+          "en": "We can check this with an example."
+        },
+        {
+          "ru": "Давай оценим порядок величины.",
+          "en": "Let's estimate the order of magnitude."
+        },
+        {
+          "ru": "Это приближение работает не всегда.",
+          "en": "This approximation doesn't always work."
+        },
+        {
+          "ru": "Важна не формула, а идея за ней.",
+          "en": "It's the idea behind the formula that matters."
+        },
+        {
+          "ru": "Можешь придумать контрпример?",
+          "en": "Can you think of a counterexample?"
+        },
+        {
+          "ru": "Теперь попробуем обобщить результат.",
+          "en": "Now let's try to generalize the result."
+        }
+      ]
+    },
+    {
+      "id": "learning-english",
+      "title": "Как учить английский",
+      "description": "Говорить о трудностях в языке, задавать вопросы и просить исправлять ошибки.",
+      "level": "A2–B1",
+      "phrases": [
+        {
+          "ru": "Я всё понимаю, но говорить мне трудно.",
+          "en": "I understand everything, but I find it hard to speak."
+        },
+        {
+          "ru": "Я хочу говорить естественнее.",
+          "en": "I want to sound more natural."
+        },
+        {
+          "ru": "Не могли бы вы говорить чуть медленнее?",
+          "en": "Could you speak a little more slowly?"
+        },
+        {
+          "ru": "Повторите, пожалуйста, последнее предложение.",
+          "en": "Could you repeat the last sentence, please?"
+        },
+        {
+          "ru": "Как это сказать по-английски?",
+          "en": "How do you say that in English?"
+        },
+        {
+          "ru": "Как произносится это слово?",
+          "en": "How do you pronounce this word?"
+        },
+        {
+          "ru": "Есть более естественный способ это сказать?",
+          "en": "Is there a more natural way to say this?"
+        },
+        {
+          "ru": "Я знаю слово, но не могу его вспомнить.",
+          "en": "I know the word, but I can't remember it."
+        },
+        {
+          "ru": "Я путаю эти два выражения.",
+          "en": "I keep mixing up these two expressions."
+        },
+        {
+          "ru": "Исправляй меня, если я ошибаюсь.",
+          "en": "Please correct me if I make a mistake."
+        },
+        {
+          "ru": "Можно сказать то же самое проще?",
+          "en": "Can you say the same thing more simply?"
+        },
+        {
+          "ru": "Дай мне секунду подумать.",
+          "en": "Give me a second to think."
+        },
+        {
+          "ru": "Я попробую сказать это по-другому.",
+          "en": "I'll try to say it differently."
+        },
+        {
+          "ru": "Можешь сказать это ещё раз?",
+          "en": "Could you say that again?"
+        },
+        {
+          "ru": "Я не знаю подходящего слова.",
+          "en": "I can't think of the right word."
+        },
+        {
+          "ru": "Давай потренируемся на коротких фразах.",
+          "en": "Let's practice with short sentences."
+        },
+        {
+          "ru": "Я бы хотел говорить увереннее.",
+          "en": "I'd like to speak more confidently."
+        },
+        {
+          "ru": "Сегодня я выучил новое выражение.",
+          "en": "I learned a new expression today."
+        }
+      ]
+    }
+  ]
+}
