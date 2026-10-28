@@ -27,7 +27,22 @@ python dev_auto.py
 
 This foreground-only updater fetches the public `main` branch and fast-forwards only after the exact commit passes the `mywords-ci-gate` GitHub Actions check. A GitHub CLI (`gh`) login is needed for its check-run query; without it simply run `python server.py`. The updater never resets tracked local edits or erases SQLite.
 
-If moving from an older checkout, **stop both servers and back up your old `local.sqlite3` first**. Copy only that database to this root folder. Never copy the previous Git history or secrets, and never commit a SQLite database.
+## Move existing study data from another local checkout
+
+Stop the previous Flask supervisor with Ctrl+C before starting the new app.
+Run `bash setup.sh --no-run` in the new checkout, then import the old database:
+
+```bash
+python migrate_db.py "/absolute/path/to/previous/local.sqlite3"
+. .venv/bin/activate && python dev_auto.py
+```
+
+The migration uses SQLite's consistent backup API and verifies the database and
+individual lesson rows. It creates `local.sqlite3` exclusively (mode 0600):
+**never overwrites an existing destination** and leaves the original file
+untouched. It refuses to run while port 8791 is open. No data is sent to GitHub.
+Keep the old checkout as an additional backup until you confirm all your islands
+and review counts on the new app. Do not copy old Git history, secrets or logs.
 
 ## Tests
 
