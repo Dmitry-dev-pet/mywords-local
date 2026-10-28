@@ -1,6 +1,7 @@
 """SQLite persistence for the local, single-user architecture spike."""
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from starter_packs import starter_island_id, starter_phrase_id
 from pathlib import Path
 import sqlite3
 import uuid
@@ -101,3 +102,26 @@ class Store:
     def event_count(self, phrase_id):
         with self.connection() as conn:
             return conn.execute('SELECT COUNT(*) FROM review_events WHERE phrase_id=?', (phrase_id,)).fetchone()[0]
+
+    def import_starter_island(self, pack):
+        """Opt-in transaction: add missing public sentences; never touch existing rows."""
+        pack_id = pack["id"]
+        island_id = starter_island_id(pack_id)
+        start = datetime.now(timezone.utc)
+        with self.connection() as conn:
+            created = conn.execute(
+                "INSERT OR IGNORE INTO islands(id,title,created_at) VALUES(?,?,?)",
+                (island_id, pack["title"], start.isoformat()),
+            ).rowcount == 1
+            added = 0
+            for i, pair in enumerate(pack["phrases"]):
+                phrase_id = starter_phrase_id(pack_id, pair["en"])
+                inserted = conn.execute(
+                    """INSERT OR IGNORE INTO phrases
+                       (id,island_id,ru,en,mastery,created_at) VALUES (?,?,?,?,0,?)""",
+                    (phrase_id, island_id, pair["ru"], pair["en"],
+                     (start + timedelta(microseconds=i + 1)).isoformat()),
+                ).rowcount
+                added += inserted
+        return {"island_id": island_id, "created": created, "added": added,
+                "total": len(pack["phrases"])}

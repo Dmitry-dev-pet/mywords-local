@@ -32,6 +32,9 @@ createApp({
     const ready = ref(true);
     const error = ref('');
     const islands = ref([]);
+    const starterPacks = ref([]);
+    const importingPresetId = ref(null);
+    const starterMessage = ref('');
     const selectedId = ref(null);
     const phrases = ref([]);
     const currentId = ref(null);
@@ -175,6 +178,28 @@ createApp({
       phrases.value = [];
       run(() => refresh(id));
     }
+    function starterInstalled(pack) {
+      return islands.value.some(island => island.id === pack.island_id);
+    }
+    async function importPreset(packId) {
+      if (importingPresetId.value !== null) return;
+      importingPresetId.value = packId;
+      starterMessage.value = '';
+      error.value = '';
+      try {
+        const result = await api('/api/starter-islands/' + encodeURIComponent(packId) + '/import', {
+          method: 'POST',
+        });
+        await refresh(result.island_id);
+        starterMessage.value = result.added
+          ? 'Добавлено ' + result.added + ' фраз. Теперь остров можно открыть и тренировать.'
+          : 'Этот набор уже добавлен. Твои оценки не изменились.';
+      } catch (e) {
+        error.value = e.message || String(e);
+      } finally {
+        importingPresetId.value = null;
+      }
+    }
     function createIsland() {
       run(async () => {
         const island = await api('/api/islands', {
@@ -234,6 +259,7 @@ createApp({
       window.addEventListener('keydown', onKeyDown);
       run(async () => {
         await refresh();
+        starterPacks.value = await api('/api/starter-islands');
         if (!islands.value.length) tab.value = 'library';
       });
     });
@@ -242,7 +268,8 @@ createApp({
       stopAudio();
     });
 
-    return { ready, error, islands, selectedId, selectedIsland, phrases,
+    return { ready, error, islands, starterPacks, importingPresetId, starterMessage,
+      starterInstalled, importPreset, selectedId, selectedIsland, phrases,
       currentPhrase, currentIndex, practiced, mastered, scoreLabel,
       tab, mode, revealed, playing, audioStatus, settings, navOpen, settingsOpen, settingsTab,
       newIsland, newRu, newEn, selectIsland, createIsland, addPhrase,

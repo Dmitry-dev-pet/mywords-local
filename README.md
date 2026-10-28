@@ -45,6 +45,21 @@ removes incomplete new copies after failures and leaves the original unchanged. 
 Keep the old checkout as an additional backup until you confirm all your islands
 and review counts on the new app. Do not copy old Git history, secrets or logs.
 
+## Optional ready-made islands
+
+The **Готовые острова** section in the catalog offers 8 curated Russian-to-English
+conversation packs (144 sentences). Open **Языковые острова**, preview the entire
+pack, and choose **Добавить в мои острова**. Nothing is installed automatically.
+A repeat import is idempotent: existing phrases, user-created islands, scores,
+and review events are not overwritten. You can practice any imported pack in
+the normal Focus/Recall screens. The packs are plain public JSON in
+`data/starter-islands.json`, not generated or fetched by an LLM.
+
+Levels are approximate learning labels, not certified CEFR assessments.
+You can keep adding your own sentences alongside any imported pack. The catalog
+endpoint is read-only; the local database changes only after an explicit
+import button press. No study history leaves the device.
+
 ## Tests
 
 ```bash

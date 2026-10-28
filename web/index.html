@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#253650">
   <title>MyWords · Языковые острова</title>
   <link rel="stylesheet" href="/web/styles.css">
+  <link rel="stylesheet" href="/web/starter-islands.css">
   <script type="module" src="/web/app.js"></script>
 </head>
 <body>
@@ -88,6 +89,41 @@
                 </button>
               </div>
               <div v-if="!islands.length" class="empty-catalog">Пока нет островов. Создай первый ниже.</div>
+            </section>
+
+            <section class="catalog-section starter-section" v-if="starterPacks.length">
+              <div class="section-title"><h2>Готовые острова</h2><span>{{ starterPacks.length }}</span></div>
+              <p class="starter-intro">Готовые фразы для разговорной практики. Просмотри набор и добавь только нужные темы. Твои острова и оценки не изменятся.</p>
+              <div class="starter-grid">
+                <article class="starter-card" v-for="pack in starterPacks" :key="pack.id">
+                  <div class="starter-card-top">
+                    <span class="starter-level">{{ pack.level }}</span>
+                    <span>{{ pack.phrase_count }} предложений</span>
+                  </div>
+                  <h3>{{ pack.title }}</h3>
+                  <p>{{ pack.description }}</p>
+                  <div class="starter-preview">
+                    <span>Пример фразы</span>
+                    <strong>{{ pack.phrases[0].en }}</strong>
+                    <small>{{ pack.phrases[0].ru }}</small>
+                  </div>
+                  <details class="starter-details">
+                    <summary>Посмотреть все {{ pack.phrase_count }} фраз</summary>
+                    <ol>
+                      <li v-for="(phrase,i) in pack.phrases" :key="i">
+                        <span>{{ phrase.ru }}</span>
+                        <strong>{{ phrase.en }}</strong>
+                      </li>
+                    </ol>
+                  </details>
+                  <button type="button" class="starter-add" :class="{installed:starterInstalled(pack)}"
+                          :disabled="importingPresetId !== null"
+                          @click="starterInstalled(pack) ? openIsland(pack.island_id) : importPreset(pack.id)">
+                    {{ starterInstalled(pack) ? '▶ Открыть остров' : importingPresetId === pack.id ? 'Добавляю…' : '+ Добавить в мои острова' }}
+                  </button>
+                </article>
+              </div>
+              <p v-if="starterMessage" class="starter-message" role="status">{{ starterMessage }}</p>
             </section>
             <form class="create-panel" @submit.prevent="createIsland">
               <label for="new-island-title">Новый языковой остров</label>

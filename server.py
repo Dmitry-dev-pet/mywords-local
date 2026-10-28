@@ -6,6 +6,7 @@ from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory
 from werkzeug.exceptions import HTTPException
 from store import Store
+from starter_packs import list_starter_packs, find_starter_pack
 
 ROOT = Path(__file__).resolve().parent
 WEB = ROOT / 'web'
@@ -36,6 +37,19 @@ def create_app(database=None):
         return jsonify(ok=True, python=platform.python_version(), sqlite=sqlite3.sqlite_version,
                        vue_ready=(WEB / 'vendor/vue.esm-browser.prod.js').is_file(),
                        storage='local')
+
+    @app.get('/api/starter-islands')
+    def starter_islands():
+        # Public catalog only; no SQLite writes or external requests.
+        return jsonify(list_starter_packs())
+
+    @app.post('/api/starter-islands/<pack_id>/import')
+    def import_starter_island(pack_id):
+        pack = find_starter_pack(pack_id)
+        if pack is None:
+            return jsonify(error='Готовый остров не найден'), 404
+        result = store.import_starter_island(pack)
+        return jsonify(result), (201 if result['created'] else 200)
 
     @app.get('/api/islands')
     def islands():
