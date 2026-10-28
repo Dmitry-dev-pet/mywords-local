@@ -1,2 +1,46 @@
-# mywords-local
-MyWords: local-first English practice with Vue 3, Flask, SQLite, Focus/Recall and browser speech.
+# MyWords Local
+
+Local-first personal English practice with **Vue 3 + Flask + SQLite**. Features: language islands, Focus (listening and repeating), Recall (remembering an English phrase from Russian), customizable browser speech and pauses, and manual ratings stored on device.
+
+**This is a fresh public repository containing only the standalone application.** No personal database, earlier cloud app, private project history, research screenshots, login credentials, LLM service, or outbound user telemetry is included.
+
+## Run on Android / Termux
+
+```bash
+pkg install python nodejs-lts git
+git clone https://github.com/Dmitry-dev-pet/mywords-local.git
+cd mywords-local
+bash setup.sh
+```
+
+Open http://127.0.0.1:8791/ on the same device. Use Ctrl+C to stop the server. **Do not expose the Flask port to the internet or a shared LAN**: it deliberately has no authentication.
+
+Words, scores, and review events remain in git-ignored `local.sqlite3`. The browser stores playback options in `localStorage`. Real Android speech depends on installed system voices and the screen remaining active.
+
+## Develop with the GitHub CI gate
+
+```bash
+bash setup.sh --no-run
+. .venv/bin/activate
+python dev_auto.py
+```
+
+This foreground-only updater fetches the public `main` branch and fast-forwards only after the exact commit passes the `mywords-ci-gate` GitHub Actions check. A GitHub CLI (`gh`) login is needed for its check-run query; without it simply run `python server.py`. The updater never resets tracked local edits or erases SQLite.
+
+If moving from an older checkout, **stop both servers and back up your old `local.sqlite3` first**. Copy only that database to this root folder. Never copy the previous Git history or secrets, and never commit a SQLite database.
+
+## Tests
+
+```bash
+python -m unittest discover -s tests -v
+node --test tests/test_audio_sequence.mjs
+node --check web/app.js
+npm install --ignore-scripts --no-audit --no-fund
+npm run typecheck
+```
+
+Public GitHub Actions runs Python API/SQLite/updater fixtures, Node audio tests, strict JSDoc typechecking and real Chromium Playwright tests with **mocked** speech callbacks. Black/Ruff/mypy initially report baseline issues without blocking. Real Android TTS still needs on-device testing.
+
+Browser audio never records reviews. Only rating buttons add a review event. The Flask app neither sends lesson text nor posts diagnostics to GitHub.
+
+Design uses original MyWords components inspired by layout references, without external screenshot assets or third-party logos. No open-source license has been selected yet.

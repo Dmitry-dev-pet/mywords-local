@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#253650">
+  <title>MyWords · Языковые острова</title>
+  <link rel="stylesheet" href="/web/styles.css">
+  <script type="module" src="/web/app.js"></script>
+</head>
+<body>
+<div id="app" v-cloak>
+  <div v-if="navOpen" class="mobile-scrim" @click="navOpen=false"></div>
+  <div class="app-layout">
+    <aside class="app-sidebar" :class="{opened:navOpen}" aria-label="Навигация MyWords">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">M</span>
+        <span><strong>MyWords</strong><small>Language learning</small></span>
+        <button type="button" class="close-nav" aria-label="Закрыть меню" @click="navOpen=false">×</button>
+      </div>
+      <div class="language-chip"><span>🇺🇸</span><span><small>ИЗУЧАЮ</small><strong>English</strong></span><span class="lang-arrow">⌄</span></div>
+
+      <div class="nav-label">ГЛАВНОЕ</div>
+      <nav class="main-nav">
+        <button type="button" class="nav-entry" :class="{active:tab==='library'}" @click="openCatalog">
+          <span class="nav-icon">▦</span> Языковые острова
+        </button>
+        <button type="button" class="nav-entry" :class="{active:tab==='practice'}" @click="showPractice">
+          <span class="nav-icon">▶</span> Тренировка
+        </button>
+        <button type="button" class="nav-entry" :class="{active:tab==='editor'}" @click="openEditor">
+          <span class="nav-icon">✎</span> Редактор
+        </button>
+      </nav>
+      <div class="nav-label nav-label-secondary">МОИ ОСТРОВА</div>
+      <nav class="island-nav" aria-label="Мои острова">
+        <button v-for="island in islands" :key="island.id" type="button" class="island-nav-entry"
+                :class="{active:selectedId===island.id && tab==='practice'}" @click="openIsland(island.id)">
+          <span class="island-dot"></span><span class="island-label">{{ island.title }}</span>
+        </button>
+        <p v-if="!islands.length" class="nav-placeholder">Здесь появятся твои темы.</p>
+      </nav>
+      <div class="sidebar-bottom">
+        <span class="status-dot"></span>
+        <div><strong>Локальная версия</strong><small>Termux · SQLite · без LLM</small></div>
+      </div>
+    </aside>
+
+    <div class="app-content">
+      <header class="topbar">
+        <button type="button" class="mobile-menu icon-button" aria-label="Открыть меню" @click="navOpen=true">☰</button>
+        <div class="breadcrumb">
+          <span class="breadcrumb-root">MyWords</span><span class="chevron">›</span>
+          <span>{{ tab==='library' ? 'Мои острова' : tab==='editor' ? 'Редактор' : (selectedIsland?.title || 'Тренировка') }}</span>
+        </div>
+        <div class="header-actions">
+          <span class="local-badge">● Локально · OPEN-1</span>
+          <button v-if="tab==='practice' && selectedIsland" type="button" class="icon-button header-settings"
+                  aria-label="Открыть настройки" @click="openSettings('sound')">⚙</button>
+        </div>
+      </header>
+
+      <p v-if="error" class="error-banner" role="alert">{{ error }}</p>
+      <div class="main-grid" :class="{'practice-grid':tab==='practice'}">
+        <main class="main-surface" :class="{'practice-surface':tab==='practice'}">
+
+          <template v-if="tab==='library'">
+            <section class="islands-hero">
+              <div><small>МОЯ БИБЛИОТЕКА</small><h1>Языковые острова</h1>
+                <p>Собственные темы и предложения для ежедневной практики.</p>
+                <span class="hero-metrics">{{ islands.length }} островов · Русский → English</span>
+              </div>
+              <div class="hero-symbol" aria-hidden="true">◎</div>
+            </section>
+            <section class="intro-panel">
+              <div><h2>Выбери одну тему. Этого достаточно.</h2>
+                <p>Сначала слушай, потом попробуй вспомнить фразу по-английски.</p>
+                <div class="learning-steps"><span>1 Слушай</span><span>2 Повтори</span><span>3 Вспомни</span></div>
+              </div>
+            </section>
+            <section class="catalog-section">
+              <div class="section-title"><h2>Мои острова</h2><span>{{ islands.length }}</span></div>
+              <div class="island-grid">
+                <button v-for="island in islands" :key="island.id" type="button" class="island-tile" @click="openIsland(island.id)">
+                  <span class="tile-icon" aria-hidden="true">▤</span>
+                  <span class="tile-copy"><strong>{{ island.title }}</strong><small>Открыть тренировку</small></span>
+                  <span class="tile-arrow" aria-hidden="true">›</span>
+                </button>
+              </div>
+              <div v-if="!islands.length" class="empty-catalog">Пока нет островов. Создай первый ниже.</div>
+            </section>
+            <form class="create-panel" @submit.prevent="createIsland">
+              <label for="new-island-title">Новый языковой остров</label>
+              <div class="input-action">
+                <input id="new-island-title" v-model="newIsland" maxlength="120" required
+                       placeholder="Например, Работа или Серфинг">
+                <button type="submit" class="primary">+ Создать</button>
+              </div>
+            </form>
+          </template>
+
+          <template v-else-if="tab==='editor'">
+            <div class="editor-heading">
+              <button type="button" class="back-button" @click="openCatalog" aria-label="К списку островов">‹</button>
+              <div><small>МОЙ МАТЕРИАЛ</small><h1>{{ selectedIsland?.title || 'Редактор' }}</h1></div>
+              <button v-if="selectedIsland" type="button" class="primary" @click="showPractice">▶ Тренировка</button>
+            </div>
+            <template v-if="selectedIsland">
+              <form class="editor-form" @submit.prevent="addPhrase">
+                <h2>Добавить предложение</h2>
+                <p>Вводи свои мысли и подходящие английские формулировки вручную.</p>
+                <label for="phrase-ru">Русский смысл</label>
+                <textarea id="phrase-ru" v-model="newRu" rows="3" maxlength="2000" required
+                          placeholder="Я хочу поймать волну."></textarea>
+                <label for="phrase-en">Английская фраза</label>
+                <textarea id="phrase-en" v-model="newEn" rows="3" maxlength="2000" required
+                          placeholder="I want to catch a wave."></textarea>
+                <button type="submit" class="primary">Добавить фразу</button>
+              </form>
+              <div class="section-title editor-list-title"><h2>Предложения</h2><span>{{ phrases.length }}</span></div>
+              <div class="sentence-list">
+                <div class="sentence-item" v-for="(phrase,i) in phrases" :key="phrase.id">
+                  <div class="sentence-number">{{ i + 1 }}</div>
+                  <div class="sentence-text"><strong>{{ phrase.en }}</strong><p>{{ phrase.ru }}</p>
+                    <small>{{ !phrase.review_count ? 'Новая' : phrase.mastery===2 ? '✓ Выучил' : 'В повторении' }}</small>
+                  </div>
+                  <button type="button" class="outline-button" @click="practicePhrase(phrase.id)">Тренировать</button>
+                </div>
+                <p v-if="!phrases.length" class="empty-catalog">В этом острове пока нет предложений.</p>
+              </div>
+            </template>
+            <div v-else class="empty-catalog">Сначала создай или выбери остров в каталоге.</div>
+          </template>
+
+          <template v-else>
+            <template v-if="currentPhrase">
+              <div class="study-toolbar">
+                <button type="button" class="back-button" @click="openCatalog" aria-label="К островам">‹</button>
+                <div class="study-tabs" role="group" aria-label="Режим тренировки">
+                  <button type="button" :class="{active:mode==='focus'}" :aria-pressed="mode==='focus'"
+                          @click="mode='focus'">Фокус</button>
+                  <button type="button" :class="{active:mode==='recall'}" :aria-pressed="mode==='recall'"
+                          @click="mode='recall'">Вспомнить</button>
+                </div>
+                <button type="button" class="toolbar-settings icon-button" aria-label="Настройки тренировки"
+                        @click="openSettings('sound')">⚙</button>
+              </div>
+              <div class="progress-track" role="progressbar" :aria-valuenow="currentIndex+1"
+                   :aria-valuemin="1" :aria-valuemax="phrases.length" aria-label="Прогресс тренировки">
+                <span :style="{width: ((currentIndex+1)/phrases.length*100)+'%'}"></span>
+              </div>
+              <div class="session-subhead">
+                <span>{{ mode==='focus' ? 'ТЕНЬ · СЛУШАЙ И ПОВТОРЯЙ' : 'ВСПОМНИТЬ · СКАЖИ ПО-АНГЛИЙСКИ' }}</span>
+                <span>{{ currentIndex+1 }} / {{ phrases.length }}</span>
+              </div>
+              <div class="quick-controls">
+                <button type="button" @click="openEditor">☷ &nbsp;Все {{ phrases.length }}</button>
+                <button type="button" :aria-pressed="revealed" @click="revealed=!revealed">文 &nbsp;Перевод</button>
+                <button type="button" :aria-pressed="settings.order==='ru-en'" @click="toggleDualAudio">◉ &nbsp;Двойное аудио</button>
+                <button type="button" @click="openSettings('sound')">↻ &nbsp;{{ settings.repeats }}× · {{ settings.pauseMs/1000 }}с</button>
+              </div>
+              <div class="focus-stage" :key="currentPhrase.id + mode">
+                <button type="button" class="speaker-circle" @click="play('phrase')" aria-label="Озвучить текущую фразу">♪</button>
+                <p v-if="mode==='recall'" class="recall-hint">Сначала скажи ответ вслух</p>
+                <p class="focus-phrase">{{ mode==='focus' ? currentPhrase.en : currentPhrase.ru }}</p>
+                <button type="button" class="reveal-link" :aria-expanded="revealed" @click="revealed=!revealed">
+                  {{ revealed ? 'Скрыть перевод' : (mode==='focus' ? 'Нажмите, чтобы показать перевод' : 'Нажмите, чтобы увидеть перевод') }}
+                </button>
+                <p v-if="revealed" class="focus-translation">{{ mode==='focus' ? currentPhrase.ru : currentPhrase.en }}</p>
+              </div>
+              <div class="transport">
+                <button type="button" class="transport-skip" @click="go(-1)" :disabled="currentIndex<=0"
+                        aria-label="Предыдущее предложение">◀◀</button>
+                <button type="button" class="transport-main" v-if="!playing" @click="play('phrase')"
+                        aria-label="Воспроизвести предложение">▶</button>
+                <button type="button" class="transport-main stop" v-else @click="stopAudio"
+                        aria-label="Остановить воспроизведение">■</button>
+                <button type="button" class="transport-skip" @click="go(1)" :disabled="currentIndex>=phrases.length-1"
+                        aria-label="Следующее предложение">▶▶</button>
+              </div>
+              <p class="playback-hint" aria-live="polite">{{ audioStatus || 'НАЖМИТЕ ▶ ДЛЯ ВОСПРОИЗВЕДЕНИЯ' }}</p>
+              <div class="playlist-actions">
+                <button type="button" @click="play('island')" :disabled="playing || phrases.length<2">▶ &nbsp;Слушать до конца острова</button>
+                <button v-if="playing" type="button" @click="stopAudio">■ Остановить</button>
+              </div>
+              <div class="evaluation">
+                <div class="evaluation-heading"><span>Оцените свои знания</span>
+                  <small>{{ scoreLabel }} · проверок: {{ currentPhrase.review_count || 0 }}</small>
+                </div>
+                <div class="rating-actions" aria-label="Оценка воспоминания">
+                  <button type="button" class="rating-hard" @click="mark(0)">
+                    <strong>Не вспомнил</strong><small>Нужно ещё</small>
+                  </button>
+                  <button type="button" class="rating-medium" @click="mark(1)">
+                    <strong>Ещё повторю</strong><small>Почти получилось</small>
+                  </button>
+                  <button type="button" class="rating-good" @click="mark(2)">
+                    <strong>Выучил</strong><small>Знаю ответ</small>
+                  </button>
+                </div>
+              </div>
+            </template>
+            <div v-else class="empty-study">
+              <div class="empty-study-icon">▤</div>
+              <h2>Добавь первые фразы</h2>
+              <p>Чтобы начать Focus и Recall, создай хотя бы одно предложение в острове.</p>
+              <button type="button" class="primary" @click="openEditor">Открыть редактор</button>
+            </div>
+          </template>
+        </main>
+
+        <aside v-if="tab==='practice'" class="info-rail" aria-label="Информация о тренировке">
+          <div class="info-pill">◷ &nbsp;Сегодняшняя практика</div>
+          <div class="stats-card">
+            <div><strong>{{ phrases.length }}</strong><small>ФРАЗ</small></div>
+            <div><strong>{{ practiced }}</strong><small>ОЦЕНЕНО</small></div>
+            <div><strong>{{ mastered }}</strong><small>ВЫУЧЕНО</small></div>
+          </div>
+          <div class="help-card">
+            <strong>КРАТКО</strong>
+            <h3>Меньше действий, больше практики</h3>
+            <p><b>Фокус.</b> Слушай английскую фразу и повторяй вслух.</p>
+            <p><b>Вспомнить.</b> Сначала произнеси ответ по-английски, затем открой перевод.</p>
+            <p><b>Аудио.</b> Настрой скорость, повторы и паузы с помощью ⚙.</p>
+            <p><b>Оценка.</b> Отмечай результат только после самостоятельной попытки.</p>
+          </div>
+          <div class="tip-card">◉ &nbsp;Ни прослушивание, ни переход к следующей фразе не повышают оценку автоматически.</div>
+        </aside>
+      </div>
+      <footer>MyWords · личная локальная версия · Vue 3 + Flask + SQLite</footer>
+    </div>
+  </div>
+
+  <div v-if="settingsOpen" class="settings-overlay" @click.self="settingsOpen=false">
+    <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="dialog-heading"><span class="dialog-icon">⚙</span>
+        <h2 id="settings-title">Настройки практики</h2>
+        <button type="button" class="dialog-close" aria-label="Закрыть настройки" @click="settingsOpen=false">×</button>
+      </div>
+      <div class="dialog-tabs" role="group" aria-label="Раздел настроек">
+        <button type="button" :class="{active:settingsTab==='main'}" @click="settingsTab='main'">Главное</button>
+        <button type="button" :class="{active:settingsTab==='sound'}" @click="settingsTab='sound'">Звук</button>
+      </div>
+      <template v-if="settingsTab==='main'">
+        <div class="setting-group"><span class="setting-eyebrow">РЕЖИМ ПРАКТИКИ</span>
+          <div class="choice-list">
+            <button type="button" :class="{selected:mode==='focus'}" @click="mode='focus'">
+              <strong>Фокус · Тень</strong><small>Слушать и повторять английские фразы.</small>
+            </button>
+            <button type="button" :class="{selected:mode==='recall'}" @click="mode='recall'">
+              <strong>Вспомнить</strong><small>Начать с русского смысла и проверить себя.</small>
+            </button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div><strong>Аудио на двух языках</strong><small>Сначала русский, затем английский</small></div>
+          <input type="checkbox" v-model="settings.order" true-value="ru-en" false-value="en">
+        </div>
+      </template>
+      <template v-else>
+        <div class="setting-group"><span class="setting-eyebrow">ВОСПРОИЗВЕДЕНИЕ</span>
+          <div class="setting-row">
+            <div><strong>Повторений на предложение</strong></div>
+            <div class="repeat-options" role="group" aria-label="Количество повторений">
+              <button type="button" v-for="n in 5" :key="n" :class="{selected:settings.repeats===n}"
+                      @click="settings.repeats=n">{{ n }}×</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div><strong>Пауза между повторами</strong></div>
+            <select v-model.number="settings.pauseMs" aria-label="Пауза между повторами">
+              <option :value="0">Нет</option><option :value="500">0,5 с</option>
+              <option :value="1000">1 с</option><option :value="2000">2 с</option><option :value="3000">3 с</option>
+            </select>
+          </div>
+          <div class="speed-control">
+            <div class="speed-heading"><strong>Скорость воспроизведения</strong><span>{{ settings.rate.toFixed(2) }}×</span></div>
+            <input type="range" v-model.number="settings.rate" min="0.5" max="1.5" step="0.05" aria-label="Скорость воспроизведения">
+            <div class="speed-ticks"><span>0,5×</span><span>1×</span><span>1,5×</span></div>
+          </div>
+        </div>
+        <div class="setting-group"><span class="setting-eyebrow">ДВОЙНОЕ АУДИО</span>
+          <div class="setting-row">
+            <div><strong>Сначала русский</strong><small>Произнести русский смысл перед английским</small></div>
+            <input type="checkbox" v-model="settings.order" true-value="ru-en" false-value="en">
+          </div>
+          <div v-if="settings.order==='ru-en'" class="setting-row">
+            <div><strong>Пауза после русского</strong></div>
+            <select v-model.number="settings.languagePauseMs" aria-label="Пауза после русского">
+              <option :value="0">Нет</option><option :value="500">0,5 с</option>
+              <option :value="1000">1 с</option><option :value="2000">2 с</option>
+            </select>
+          </div>
+        </div>
+      </template>
+      <div class="dialog-footer"><button type="button" class="primary" @click="settingsOpen=false">Готово</button></div>
+    </section>
+  </div>
+</div>
+</body>
+</html>
