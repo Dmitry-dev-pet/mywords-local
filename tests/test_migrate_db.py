@@ -1,10 +1,12 @@
 """Offline, private-data-safe SQLite import regression tests."""
 
 from pathlib import Path
+import os
 import sqlite3
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from migrate_db import MigrationError, migrate_database
@@ -86,6 +88,41 @@ class MigrationTests(unittest.TestCase):
         with self.assertRaisesRegex(MigrationError, "foreign key"):
             migrate_database(self.old, self.new)
         self.assertFalse(self.new.exists())
+
+
+    def test_termux_without_os_link_still_migrates(self):
+        island = self.old_store.add_island("Android")
+        phrase = self.old_store.add_phrase(island["id"], "Привет", "Hello")
+        self.old_store.review(phrase["id"], 1)
+        # The actual Termux build can omit os.link entirely.
+        with patch.object(os, "link", None, create=True):
+            counts = migrate_database(self.old, self.new)
+        self.assertEqual(counts["phrases"], 1)
+        self.assertEqual(Store(self.new).event_count(phrase["id"]), 1)
+
+    def test_failed_copy_removes_partial_destination_but_preserves_source(self):
+        island = self.old_store.add_island("Android")
+        self.old_store.add_phrase(island["id"], "Привет", "Hello")
+        original = self.old.read_bytes()
+        with patch("migrate_db.shutil.copyfileobj", side_effect=OSError("simulated")):
+            with self.assertRaises(MigrationError):
+                migrate_database(self.old, self.new)
+        self.assertFalse(self.new.exists())
+        self.assertEqual(self.old.read_bytes(), original)
+        self.assertEqual(list(self.base.glob(".mywords-import-*.sqlite3")), [])
+
+    def test_exclusive_create_rejects_destination_created_during_copy(self):
+        original_open = os.open
+
+        def race_open(path, flags, mode=0o777):
+            if Path(path) == self.new:
+                self.new.write_bytes(b"other owner data")
+            return original_open(path, flags, mode)
+
+        with patch("migrate_db.os.open", side_effect=race_open):
+            with self.assertRaisesRegex(MigrationError, "already exists"):
+                migrate_database(self.old, self.new)
+        self.assertEqual(self.new.read_bytes(), b"other owner data")
 
 
 if __name__ == "__main__":

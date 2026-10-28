@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import socket
 import sqlite3
 import sys
@@ -80,12 +81,13 @@ def migrate_database(source: Path, destination: Path) -> dict[str, int]:
     if not destination.parent.is_dir():
         raise MigrationError("Destination directory does not exist")
     temporary: Path | None = None
+    created_destination = False
+    completed = False
     try:
         with closing(_open_source(source)) as input_db:
             counts, source_digest = _fingerprint(input_db)
-            # A temporary database on the destination filesystem allows an
-            # atomic exclusive hardlink; simultaneous destination creation
-            # cannot overwrite the user's existing study file.
+            # Prepare and verify a consistent SQLite backup before creating
+            # the destination. Android's Termux Python may lack os.link().
             fd, name = tempfile.mkstemp(
                 prefix=".mywords-import-", suffix=".sqlite3",
                 dir=destination.parent,
@@ -99,8 +101,28 @@ def migrate_database(source: Path, destination: Path) -> dict[str, int]:
                 copied_counts, copied_digest = _fingerprint(output_db)
             if counts != copied_counts or source_digest != copied_digest:
                 raise MigrationError("Copied lessons do not match the source")
-            os.link(temporary, destination)  # fails if destination exists
-            return copied_counts
+            # O_EXCL is available in Termux even where os.link is absent.
+            # Only a brand-new destination may be created; never overwrite.
+            fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            created_destination = True
+            try:
+                with os.fdopen(fd, "wb") as output_file:
+                    fd = None
+                    with temporary.open("rb") as verified_backup:
+                        shutil.copyfileobj(verified_backup, output_file)
+                    output_file.flush()
+                    os.fsync(output_file.fileno())
+            finally:
+                if fd is not None:
+                    os.close(fd)
+
+            # Verify the final file too, not merely the temporary SQLite copy.
+            with closing(_open_source(destination)) as final_db:
+                final_counts, final_digest = _fingerprint(final_db)
+            if counts != final_counts or source_digest != final_digest:
+                raise MigrationError("Final database does not match the source")
+            completed = True
+            return final_counts
     except (OSError, sqlite3.DatabaseError) as exc:
         if isinstance(exc, FileExistsError):
             raise MigrationError("Destination already exists; refusing to overwrite") from None
@@ -108,6 +130,10 @@ def migrate_database(source: Path, destination: Path) -> dict[str, int]:
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
+        # If a write or final verification failed, remove only the new file
+        # created by this invocation; never touch an existing destination.
+        if created_destination and not completed:
+            destination.unlink(missing_ok=True)
 
 
 def _server_running() -> bool:

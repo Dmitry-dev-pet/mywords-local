@@ -38,9 +38,10 @@ python migrate_db.py "/absolute/path/to/previous/local.sqlite3"
 ```
 
 The migration uses SQLite's consistent backup API and verifies the database and
-individual lesson rows. It creates `local.sqlite3` exclusively (mode 0600):
-**never overwrites an existing destination** and leaves the original file
-untouched. It refuses to run while port 8791 is open. No data is sent to GitHub.
+individual lesson rows. It creates `local.sqlite3` exclusively with
+`os.open(O_EXCL)` (compatible with Termux Python even without `os.link`),
+then verifies the final file. It **never overwrites an existing destination**,
+removes incomplete new copies after failures and leaves the original unchanged. It refuses to run while port 8791 is open. No data is sent to GitHub.
 Keep the old checkout as an additional backup until you confirm all your islands
 and review counts on the new app. Do not copy old Git history, secrets or logs.
 
