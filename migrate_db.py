@@ -67,6 +67,27 @@ def _fingerprint(conn: sqlite3.Connection) -> tuple[dict[str, int], str]:
             )
             count += 1
         counts[table] = count
+    # Newer backups include language-specific events and translation rows.
+    # Old SQLite files are still compatible; verify every extra row when present.
+    event_columns = {r[1] for r in conn.execute("PRAGMA table_info(review_events)")}
+    if "language" in event_columns:
+        digest.update(b"review_events.language\\0")
+        for row in conn.execute("SELECT id, language FROM review_events ORDER BY id"):
+            digest.update(json.dumps(list(row), ensure_ascii=False).encode("utf-8") + b"\\n")
+    has_translations = conn.execute("""
+        SELECT 1 FROM sqlite_master WHERE type='table' AND name='phrase_translations'
+    """).fetchone() is not None
+    if has_translations:
+        required = {"phrase_id", "language", "text", "mastery"}
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(phrase_translations)")}
+        if not required.issubset(columns):
+            raise MigrationError("Database has an incompatible translations schema")
+        digest.update(b"phrase_translations\\0")
+        for row in conn.execute("""
+            SELECT phrase_id, language, text, mastery
+            FROM phrase_translations ORDER BY phrase_id, language
+        """):
+            digest.update(json.dumps(list(row), ensure_ascii=False).encode("utf-8") + b"\\n")
     return counts, digest.hexdigest()
 
 
