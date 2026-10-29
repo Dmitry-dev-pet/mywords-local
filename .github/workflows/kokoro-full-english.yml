@@ -1,4 +1,4 @@
-name: Kokoro English 144-phrase audio packs
+name: Kokoro English 144-phrase audio packs (strict crest-factor QA)
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ jobs:
   english-full:
     if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/kokoro-all-voices-catalog'
     runs-on: ubuntu-24.04
-    timeout-minutes: 50
+    timeout-minutes: 55
     strategy:
       fail-fast: false
       matrix:
