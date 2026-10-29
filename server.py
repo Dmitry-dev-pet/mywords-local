@@ -80,7 +80,8 @@ def create_app(database=None, voice_root=None):
     @app.post('/api/voice-packs/install')
     def voice_pack_install():
         try:
-            return jsonify(voice_library.install(uploaded_voice_zip()))
+            return jsonify(voice_library.install(
+                uploaded_voice_zip(), accepted_openrail=request.form.get('accepted_openrail') == 'true'))
         except InvalidVoicePack as error:
             return jsonify(error=str(error)), 409 if 'уже' in str(error).lower() else 400
 
