@@ -180,6 +180,20 @@ def verify(directory: Path, *, require_complete: bool = True) -> dict:
         raise ValueError("Unlisted MP3 files")
     if manifest.get("summary") != {"files": len(entries), "bytes": total_bytes}:
         raise ValueError("Wrong manifest totals")
+    if voice["model"] == "russian":
+        license_info = manifest.get("redistribution")
+        if not isinstance(license_info, dict) or not license_info.get("requires_acceptance"):
+            raise ValueError("Russian OpenRAIL license terms are mandatory")
+        license_file = directory / "LICENSE-dialogs-openrail.md"
+        if (license_info.get("license_file") != license_file.name
+                or license_file.is_symlink() or not license_file.is_file()
+                or license_file.stat().st_size > 100_000
+                or digest(license_file) != license_info.get("license_sha256")
+                or license_info.get("dataset_repository") != "langswap/dialogs-ru-emotional-conversations"):
+            raise ValueError("Russian OpenRAIL license missing or corrupt")
+        full_text = license_file.read_text("utf-8")
+        if not all(s in full_text for s in ("OpenRAIL", "Use Restrictions", "Distribution")):
+            raise ValueError("Incomplete Russian OpenRAIL terms")
     return {"voice_id": name, "files": len(entries), "bytes": total_bytes, "verified": True}
 
 
@@ -349,6 +363,32 @@ def generate(name: str, *, output: Path = OUTPUT, sample: int = 0) -> dict:
                                 "file": output_file.name,
                                 "sha256": digest(output_file), "bytes": output_file.stat().st_size})
                 print(f"{name}: {index}/{len(rows)}", flush=True)
+        redistribution = None
+        if voice["model"] == "russian":
+            # The trained Dialogs actor voices are OpenRAIL. The dataset
+            # license explicitly covers derived models and outputs and must
+            # accompany redistributed MP3s. Pin the exact dataset revision.
+            from huggingface_hub import HfApi, hf_hub_download
+            dataset = "langswap/dialogs-ru-emotional-conversations"
+            dataset_rev = HfApi().dataset_info(repo_id=dataset).sha
+            source_license = Path(hf_hub_download(
+                repo_id=dataset, repo_type="dataset", revision=dataset_rev,
+                filename="LICENSE.md"))
+            license_bytes = source_license.read_bytes()
+            if not (1000 < len(license_bytes) < 100_000
+                    and b"OpenRAIL" in license_bytes
+                    and b"Use Restrictions" in license_bytes):
+                raise ValueError("Cannot verify upstream Dialogs OpenRAIL license")
+            (stage / "LICENSE-dialogs-openrail.md").write_bytes(license_bytes)
+            redistribution = {
+                "requires_acceptance": True,
+                "license_file": "LICENSE-dialogs-openrail.md",
+                "license_sha256": digest(stage / "LICENSE-dialogs-openrail.md"),
+                "dataset_repository": dataset,
+                "dataset_revision": dataset_rev,
+                "license_url": ("https://huggingface.co/datasets/" + dataset
+                                + "/blob/" + dataset_rev + "/LICENSE.md"),
+            }
         manifest = {
             "schema_version": 1, "pack_id": pack_id(name), "voice_id": name,
             "locale": voice["locale"],
@@ -358,6 +398,7 @@ def generate(name: str, *, output: Path = OUTPUT, sample: int = 0) -> dict:
             "model_files_sha256": model_hashes,
             "model_license": voice_data["models"][voice["model"]]["license"],
             "license_review_required": voice["model"] == "russian",
+            "redistribution": redistribution,
             "synthetic_audio": True,
             "source": "data/starter-islands.json", "source_sha256": digest(SOURCE),
             "catalog_sha256": digest(CATALOG),
