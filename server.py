@@ -5,7 +5,7 @@ import sqlite3
 from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory
 from werkzeug.exceptions import HTTPException
-from store import Store
+from store import Store, LANGUAGES
 from starter_packs import list_starter_packs, find_starter_pack
 
 ROOT = Path(__file__).resolve().parent
@@ -36,7 +36,7 @@ def create_app(database=None):
     def health():
         return jsonify(ok=True, python=platform.python_version(), sqlite=sqlite3.sqlite_version,
                        vue_ready=(WEB / 'vendor/vue.esm-browser.prod.js').is_file(),
-                       storage='local')
+                       storage='local', languages=list(LANGUAGES))
 
     @app.get('/api/starter-islands')
     def starter_islands():
@@ -67,7 +67,11 @@ def create_app(database=None):
 
     @app.get('/api/islands/<island_id>/phrases')
     def phrases(island_id):
-        return jsonify(store.phrases(island_id))
+        language = request.args.get('language', 'en-US')
+        try:
+            return jsonify(store.phrases(island_id, language))
+        except ValueError as error:
+            return jsonify(error=str(error)), 400
 
     @app.post('/api/islands/<island_id>/phrases')
     def add_phrase(island_id):
@@ -75,7 +79,22 @@ def create_app(database=None):
         if not isinstance(data, dict):
             return jsonify(error='Ожидался JSON-объект'), 400
         try:
-            return jsonify(store.add_phrase(island_id, data.get('ru'), data.get('en'))), 201
+            target = data.get('target') if 'target' in data else data.get('en')
+            return jsonify(store.add_phrase(island_id, data.get('ru'), target,
+                                            data.get('language', 'en-US'))), 201
+        except ValueError as error:
+            return jsonify(error=str(error)), 400
+        except LookupError as error:
+            return jsonify(error=str(error)), 404
+
+    @app.post('/api/phrases/<phrase_id>/translations')
+    def add_translation(phrase_id):
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            return jsonify(error='Ожидался JSON-объект'), 400
+        try:
+            return jsonify(store.add_translation(phrase_id, data.get('language'),
+                                                 data.get('target'))), 201
         except ValueError as error:
             return jsonify(error=str(error)), 400
         except LookupError as error:
@@ -87,7 +106,8 @@ def create_app(database=None):
         if not isinstance(data, dict):
             return jsonify(error='Ожидался JSON-объект'), 400
         try:
-            return jsonify(store.review(phrase_id, data.get('mastery')))
+            return jsonify(store.review(phrase_id, data.get('mastery'),
+                                        data.get('language', 'en-US')))
         except ValueError as error:
             return jsonify(error=str(error)), 400
         except LookupError as error:

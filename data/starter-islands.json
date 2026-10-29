@@ -9,75 +9,93 @@
       "phrases": [
         {
           "ru": "Привет, рад познакомиться.",
-          "en": "Hi, nice to meet you."
+          "en": "Hi, nice to meet you.",
+          "pt-PT": "Olá, muito prazer."
         },
         {
           "ru": "Как тебя зовут?",
-          "en": "What's your name?"
+          "en": "What's your name?",
+          "pt-PT": "Como te chamas?"
         },
         {
           "ru": "Откуда ты?",
-          "en": "Where are you from?"
+          "en": "Where are you from?",
+          "pt-PT": "De onde és?"
         },
         {
           "ru": "Я сейчас живу в Португалии.",
-          "en": "I'm living in Portugal at the moment."
+          "en": "I'm living in Portugal at the moment.",
+          "pt-PT": "Neste momento, vivo em Portugal."
         },
         {
           "ru": "Ты здесь впервые?",
-          "en": "Is this your first time here?"
+          "en": "Is this your first time here?",
+          "pt-PT": "É a primeira vez que estás aqui?"
         },
         {
           "ru": "Как давно ты здесь?",
-          "en": "How long have you been here?"
+          "en": "How long have you been here?",
+          "pt-PT": "Há quanto tempo estás aqui?"
         },
         {
           "ru": "Чем ты обычно занимаешься?",
-          "en": "What do you usually do?"
+          "en": "What do you usually do?",
+          "pt-PT": "O que costumas fazer?"
         },
         {
           "ru": "Раньше я преподавал в университете.",
-          "en": "I used to teach at a university."
+          "en": "I used to teach at a university.",
+          "pt-PT": "Antes dava aulas numa universidade."
         },
         {
           "ru": "Что привело тебя сюда?",
-          "en": "What brought you here?"
+          "en": "What brought you here?",
+          "pt-PT": "O que te trouxe até cá?"
         },
         {
           "ru": "Как тебе здесь нравится?",
-          "en": "How do you like it here?"
+          "en": "How do you like it here?",
+          "pt-PT": "Estás a gostar de estar aqui?"
         },
         {
           "ru": "Мы познакомились вчера.",
-          "en": "We met yesterday."
+          "en": "We met yesterday.",
+          "pt-PT": "Conhecemo-nos ontem."
         },
         {
           "ru": "Давно этим занимаешься?",
-          "en": "Have you been doing this for long?"
+          "en": "Have you been doing this for long?",
+          "pt-PT": "Já fazes isto há muito tempo?"
         },
         {
           "ru": "Звучит интересно.",
-          "en": "That sounds interesting."
+          "en": "That sounds interesting.",
+          "pt-PT": "Parece interessante."
         },
         {
           "ru": "Расскажи мне об этом подробнее.",
-          "en": "Tell me more about it."
+          "en": "Tell me more about it.",
+          "pt-PT": "Conta-me mais sobre isso."
         },
         {
           "ru": "У нас много общего.",
-          "en": "We have a lot in common."
+          "en": "We have a lot in common.",
+          "pt-PT": "Temos muito em comum."
         },
         {
           "ru": "Было приятно пообщаться.",
-          "en": "It was nice talking to you."
+          "en": "It was nice talking to you.",
+          "pt-PT": "Gostei de falar contigo."
         },
         {
           "ru": "Может, увидимся завтра?",
-          "en": "Maybe we'll see each other tomorrow."
+          "en": "Maybe we'll see each other tomorrow.",
+          "pt-PT": "Talvez nos vejamos amanhã?"
         },
         {
           "ru": "Давай оставаться на связи.",
-          "en": "Let's keep in touch."
+          "en": "Let's keep in touch.",
+          "pt-PT": "Vamos mantendo o contacto."
         }
       ]
     },
@@ -89,75 +107,93 @@
       "phrases": [
         {
           "ru": "Сегодня я проснулся раньше обычного.",
-          "en": "I woke up earlier than usual today."
+          "en": "I woke up earlier than usual today.",
+          "pt-PT": "Hoje acordei mais cedo do que o costume."
         },
         {
           "ru": "Я ещё не завтракал.",
-          "en": "I haven't had breakfast yet."
+          "en": "I haven't had breakfast yet.",
+          "pt-PT": "Ainda não tomei o pequeno-almoço."
         },
         {
           "ru": "У меня сегодня много дел.",
-          "en": "I've got a lot to do today."
+          "en": "I've got a lot to do today.",
+          "pt-PT": "Hoje tenho muita coisa para fazer."
         },
         {
           "ru": "Сначала мне нужно закончить работу.",
-          "en": "I need to finish my work first."
+          "en": "I need to finish my work first.",
+          "pt-PT": "Primeiro, preciso de acabar o trabalho."
         },
         {
           "ru": "Я собираюсь выйти через десять минут.",
-          "en": "I'm going to leave in ten minutes."
+          "en": "I'm going to leave in ten minutes.",
+          "pt-PT": "Vou sair daqui a dez minutos."
         },
         {
           "ru": "Я забыл зарядить телефон.",
-          "en": "I forgot to charge my phone."
+          "en": "I forgot to charge my phone.",
+          "pt-PT": "Esqueci-me de carregar o telemóvel."
         },
         {
           "ru": "Мне нужно купить продукты.",
-          "en": "I need to get some groceries."
+          "en": "I need to get some groceries.",
+          "pt-PT": "Preciso de ir às compras."
         },
         {
           "ru": "Я был занят весь день.",
-          "en": "I've been busy all day."
+          "en": "I've been busy all day.",
+          "pt-PT": "Estive ocupado o dia todo."
         },
         {
           "ru": "У меня наконец появилось немного свободного времени.",
-          "en": "I've finally got some free time."
+          "en": "I've finally got some free time.",
+          "pt-PT": "Finalmente tenho algum tempo livre."
         },
         {
           "ru": "Давай отложим это на завтра.",
-          "en": "Let's put this off until tomorrow."
+          "en": "Let's put this off until tomorrow.",
+          "pt-PT": "Vamos deixar isso para amanhã."
         },
         {
           "ru": "Я немного опаздываю.",
-          "en": "I'm running a little late."
+          "en": "I'm running a little late.",
+          "pt-PT": "Estou um bocadinho atrasado."
         },
         {
           "ru": "Не торопись, у нас есть время.",
-          "en": "Take your time, we've got time."
+          "en": "Take your time, we've got time.",
+          "pt-PT": "Não tenhas pressa, temos tempo."
         },
         {
           "ru": "Сейчас я не могу говорить.",
-          "en": "I can't talk right now."
+          "en": "I can't talk right now.",
+          "pt-PT": "Agora não posso falar."
         },
         {
           "ru": "Я перезвоню тебе позже.",
-          "en": "I'll call you back later."
+          "en": "I'll call you back later.",
+          "pt-PT": "Ligo-te mais tarde."
         },
         {
           "ru": "У меня закончился мобильный интернет.",
-          "en": "I've run out of mobile data."
+          "en": "I've run out of mobile data.",
+          "pt-PT": "Fiquei sem dados móveis."
         },
         {
           "ru": "Я уже сделал большую часть работы.",
-          "en": "I've already done most of the work."
+          "en": "I've already done most of the work.",
+          "pt-PT": "Já fiz a maior parte do trabalho."
         },
         {
           "ru": "Не забудь взять ключи.",
-          "en": "Don't forget to take your keys."
+          "en": "Don't forget to take your keys.",
+          "pt-PT": "Não te esqueças de levar as chaves."
         },
         {
           "ru": "Надеюсь, завтра будет легче.",
-          "en": "I hope tomorrow will be easier."
+          "en": "I hope tomorrow will be easier.",
+          "pt-PT": "Espero que amanhã seja mais fácil."
         }
       ]
     },
@@ -169,75 +205,93 @@
       "phrases": [
         {
           "ru": "Я не совсем понял, что ты имеешь в виду.",
-          "en": "I'm not quite sure what you mean."
+          "en": "I'm not quite sure what you mean.",
+          "pt-PT": "Não percebi bem o que queres dizer."
         },
         {
           "ru": "Можешь объяснить это другими словами?",
-          "en": "Could you put that another way?"
+          "en": "Could you put that another way?",
+          "pt-PT": "Podes explicar isso por outras palavras?"
         },
         {
           "ru": "Правильно ли я тебя понял?",
-          "en": "Have I understood you correctly?"
+          "en": "Have I understood you correctly?",
+          "pt-PT": "Percebi-te bem?"
         },
         {
           "ru": "Приведи, пожалуйста, пример.",
-          "en": "Could you give me an example?"
+          "en": "Could you give me an example?",
+          "pt-PT": "Podes dar-me um exemplo, por favor?"
         },
         {
           "ru": "В чём основная идея?",
-          "en": "What's the main idea?"
+          "en": "What's the main idea?",
+          "pt-PT": "Qual é a ideia principal?"
         },
         {
           "ru": "Почему ты так думаешь?",
-          "en": "What makes you think that?"
+          "en": "What makes you think that?",
+          "pt-PT": "Porque é que pensas assim?"
         },
         {
           "ru": "Какой именно вариант ты предлагаешь?",
-          "en": "Which option exactly are you suggesting?"
+          "en": "Which option exactly are you suggesting?",
+          "pt-PT": "Qual é exatamente a opção que estás a sugerir?"
         },
         {
           "ru": "Давай сравним оба варианта.",
-          "en": "Let's compare both options."
+          "en": "Let's compare both options.",
+          "pt-PT": "Vamos comparar as duas opções."
         },
         {
           "ru": "Это зависит от обстоятельств.",
-          "en": "It depends on the situation."
+          "en": "It depends on the situation.",
+          "pt-PT": "Depende da situação."
         },
         {
           "ru": "Я вижу, к чему ты клонишь.",
-          "en": "I see what you're getting at."
+          "en": "I see what you're getting at.",
+          "pt-PT": "Já percebo onde queres chegar."
         },
         {
           "ru": "Возможно, я ошибаюсь.",
-          "en": "I might be wrong."
+          "en": "I might be wrong.",
+          "pt-PT": "Posso estar enganado."
         },
         {
           "ru": "Здесь есть одно важное различие.",
-          "en": "There's one important difference here."
+          "en": "There's one important difference here.",
+          "pt-PT": "Há aqui uma diferença importante."
         },
         {
           "ru": "Я бы сформулировал это немного иначе.",
-          "en": "I'd put it a little differently."
+          "en": "I'd put it a little differently.",
+          "pt-PT": "Eu diria isso de uma forma um pouco diferente."
         },
         {
           "ru": "Можем вернуться к этому вопросу?",
-          "en": "Can we come back to that?"
+          "en": "Can we come back to that?",
+          "pt-PT": "Podemos voltar a esse assunto?"
         },
         {
           "ru": "Что мы пытаемся решить?",
-          "en": "What are we trying to solve?"
+          "en": "What are we trying to solve?",
+          "pt-PT": "O que é que estamos a tentar resolver?"
         },
         {
           "ru": "Давай начнём с простого примера.",
-          "en": "Let's start with a simple example."
+          "en": "Let's start with a simple example.",
+          "pt-PT": "Vamos começar com um exemplo simples."
         },
         {
           "ru": "Теперь мне стало понятнее.",
-          "en": "That makes more sense now."
+          "en": "That makes more sense now.",
+          "pt-PT": "Agora faz mais sentido."
         },
         {
           "ru": "Кажется, мы говорим об одном и том же.",
-          "en": "I think we're on the same page."
+          "en": "I think we're on the same page.",
+          "pt-PT": "Acho que estamos a falar da mesma coisa."
         }
       ]
     },
@@ -249,75 +303,93 @@
       "phrases": [
         {
           "ru": "Можно меню, пожалуйста?",
-          "en": "Could I see the menu, please?"
+          "en": "Could I see the menu, please?",
+          "pt-PT": "Posso ver a ementa, por favor?"
         },
         {
           "ru": "Что вы порекомендуете?",
-          "en": "What would you recommend?"
+          "en": "What would you recommend?",
+          "pt-PT": "O que recomenda?"
         },
         {
           "ru": "Это блюдо острое?",
-          "en": "Is this dish spicy?"
+          "en": "Is this dish spicy?",
+          "pt-PT": "Este prato é picante?"
         },
         {
           "ru": "Можно без лука?",
-          "en": "Could I have it without onions?"
+          "en": "Could I have it without onions?",
+          "pt-PT": "Pode ser sem cebola?"
         },
         {
           "ru": "Можно оплатить картой?",
-          "en": "Can I pay by card?"
+          "en": "Can I pay by card?",
+          "pt-PT": "Posso pagar com cartão?"
         },
         {
           "ru": "Можно счёт, пожалуйста?",
-          "en": "Could we have the bill, please?"
+          "en": "Could we have the bill, please?",
+          "pt-PT": "Pode trazer a conta, por favor?"
         },
         {
           "ru": "Здесь есть Wi-Fi?",
-          "en": "Is there Wi-Fi here?"
+          "en": "Is there Wi-Fi here?",
+          "pt-PT": "Há Wi-Fi aqui?"
         },
         {
           "ru": "Где ближайший банкомат?",
-          "en": "Where's the nearest ATM?"
+          "en": "Where's the nearest ATM?",
+          "pt-PT": "Onde fica a caixa multibanco mais próxima?"
         },
         {
           "ru": "Как добраться до вокзала?",
-          "en": "How do I get to the train station?"
+          "en": "How do I get to the train station?",
+          "pt-PT": "Como é que chego à estação de comboios?"
         },
         {
           "ru": "Сколько времени это займёт пешком?",
-          "en": "How long does it take to walk there?"
+          "en": "How long does it take to walk there?",
+          "pt-PT": "Quanto tempo demora a pé?"
         },
         {
           "ru": "Я ищу автобусную остановку.",
-          "en": "I'm looking for the bus stop."
+          "en": "I'm looking for the bus stop.",
+          "pt-PT": "Estou à procura da paragem de autocarro."
         },
         {
           "ru": "Во сколько отправляется следующий автобус?",
-          "en": "What time does the next bus leave?"
+          "en": "What time does the next bus leave?",
+          "pt-PT": "A que horas sai o próximo autocarro?"
         },
         {
           "ru": "У меня бронь на две ночи.",
-          "en": "I have a reservation for two nights."
+          "en": "I have a reservation for two nights.",
+          "pt-PT": "Tenho uma reserva para duas noites."
         },
         {
           "ru": "Могу я оставить здесь багаж?",
-          "en": "Can I leave my luggage here?"
+          "en": "Can I leave my luggage here?",
+          "pt-PT": "Posso deixar aqui a bagagem?"
         },
         {
           "ru": "В номере не работает кондиционер.",
-          "en": "The air conditioning in my room isn't working."
+          "en": "The air conditioning in my room isn't working.",
+          "pt-PT": "O ar condicionado do meu quarto não funciona."
         },
         {
           "ru": "Мне нужен чек, пожалуйста.",
-          "en": "Could I have a receipt, please?"
+          "en": "Could I have a receipt, please?",
+          "pt-PT": "Pode dar-me o recibo, por favor?"
         },
         {
           "ru": "Это включает завтрак?",
-          "en": "Does that include breakfast?"
+          "en": "Does that include breakfast?",
+          "pt-PT": "O pequeno-almoço está incluído?"
         },
         {
           "ru": "Мы можем сесть на улице?",
-          "en": "Could we sit outside?"
+          "en": "Could we sit outside?",
+          "pt-PT": "Podemos sentar-nos lá fora?"
         }
       ]
     },
@@ -329,75 +401,93 @@
       "phrases": [
         {
           "ru": "Я только учусь серфингу.",
-          "en": "I'm just learning to surf."
+          "en": "I'm just learning to surf.",
+          "pt-PT": "Estou a aprender a fazer surf."
         },
         {
           "ru": "Можно мне доску побольше?",
-          "en": "Could I have a bigger board?"
+          "en": "Could I have a bigger board?",
+          "pt-PT": "Posso levar uma prancha maior?"
         },
         {
           "ru": "Мне нужна доска с большим объёмом.",
-          "en": "I need a board with more volume."
+          "en": "I need a board with more volume.",
+          "pt-PT": "Preciso de uma prancha com mais volume."
         },
         {
           "ru": "Сегодня волны слишком сильные для меня.",
-          "en": "The waves are too powerful for me today."
+          "en": "The waves are too powerful for me today.",
+          "pt-PT": "Hoje as ondas são demasiado fortes para mim."
         },
         {
           "ru": "Лучше зайти в воду с этой стороны?",
-          "en": "Is it better to enter the water from this side?"
+          "en": "Is it better to enter the water from this side?",
+          "pt-PT": "É melhor entrar na água por este lado?"
         },
         {
           "ru": "Здесь есть сильное течение?",
-          "en": "Is there a strong current here?"
+          "en": "Is there a strong current here?",
+          "pt-PT": "Há aqui alguma corrente forte?"
         },
         {
           "ru": "Где безопаснее всего начинать?",
-          "en": "Where's the safest place to start?"
+          "en": "Where's the safest place to start?",
+          "pt-PT": "Onde é mais seguro começar?"
         },
         {
           "ru": "Я пытаюсь поймать пену.",
-          "en": "I'm trying to catch the whitewater."
+          "en": "I'm trying to catch the whitewater.",
+          "pt-PT": "Estou a tentar apanhar a espuma."
         },
         {
           "ru": "Мне трудно догрести до места.",
-          "en": "I'm struggling to paddle out."
+          "en": "I'm struggling to paddle out.",
+          "pt-PT": "Tenho dificuldade em remar para lá da rebentação."
         },
         {
           "ru": "Я устаю ещё до того, как добираюсь до волн.",
-          "en": "I get tired before I even reach the waves."
+          "en": "I get tired before I even reach the waves.",
+          "pt-PT": "Fico cansado antes sequer de chegar às ondas."
         },
         {
           "ru": "Кажется, эта доска слишком маленькая для меня.",
-          "en": "I think this board is too small for me."
+          "en": "I think this board is too small for me.",
+          "pt-PT": "Acho que esta prancha é demasiado pequena para mim."
         },
         {
           "ru": "Мне трудно держать равновесие.",
-          "en": "I'm having trouble keeping my balance."
+          "en": "I'm having trouble keeping my balance.",
+          "pt-PT": "Tenho dificuldade em manter o equilíbrio."
         },
         {
           "ru": "Мне нужно начинать грести раньше.",
-          "en": "I need to start paddling earlier."
+          "en": "I need to start paddling earlier.",
+          "pt-PT": "Tenho de começar a remar mais cedo."
         },
         {
           "ru": "Когда лучше вставать на доску?",
-          "en": "When should I pop up?"
+          "en": "When should I pop up?",
+          "pt-PT": "Quando é que devo pôr-me de pé na prancha?"
         },
         {
           "ru": "Можешь показать мне ещё раз?",
-          "en": "Could you show me one more time?"
+          "en": "Could you show me one more time?",
+          "pt-PT": "Podes mostrar-me mais uma vez?"
         },
         {
           "ru": "Давай попробуем на более спокойных волнах.",
-          "en": "Let's try some smaller waves."
+          "en": "Let's try some smaller waves.",
+          "pt-PT": "Vamos experimentar ondas mais pequenas."
         },
         {
           "ru": "Сегодня я поймал свою первую волну.",
-          "en": "I caught my first wave today."
+          "en": "I caught my first wave today.",
+          "pt-PT": "Hoje apanhei a minha primeira onda."
         },
         {
           "ru": "Думаю, мне нужно больше практики.",
-          "en": "I think I need more practice."
+          "en": "I think I need more practice.",
+          "pt-PT": "Acho que preciso de mais prática."
         }
       ]
     },
@@ -409,75 +499,93 @@
       "phrases": [
         {
           "ru": "Я работаю над небольшим приложением.",
-          "en": "I'm working on a small app."
+          "en": "I'm working on a small app.",
+          "pt-PT": "Estou a trabalhar numa pequena aplicação."
         },
         {
           "ru": "Сначала нам нужно проверить гипотезу.",
-          "en": "We need to test the hypothesis first."
+          "en": "We need to test the hypothesis first.",
+          "pt-PT": "Primeiro precisamos de testar a hipótese."
         },
         {
           "ru": "Я нашёл ошибку в последней версии.",
-          "en": "I found a bug in the latest version."
+          "en": "I found a bug in the latest version.",
+          "pt-PT": "Encontrei um erro na última versão."
         },
         {
           "ru": "Проблема возникает только на Android.",
-          "en": "The issue only happens on Android."
+          "en": "The issue only happens on Android.",
+          "pt-PT": "O problema só acontece no Android."
         },
         {
           "ru": "Давай воспроизведём ошибку.",
-          "en": "Let's reproduce the bug."
+          "en": "Let's reproduce the bug.",
+          "pt-PT": "Vamos tentar reproduzir o erro."
         },
         {
           "ru": "Я пока не понимаю причину.",
-          "en": "I don't understand the cause yet."
+          "en": "I don't understand the cause yet.",
+          "pt-PT": "Ainda não percebo qual é a causa."
         },
         {
           "ru": "У нас есть рабочая версия.",
-          "en": "We have a working version."
+          "en": "We have a working version.",
+          "pt-PT": "Já temos uma versão funcional."
         },
         {
           "ru": "Это изменение не должно затрагивать старые данные.",
-          "en": "This change shouldn't affect existing data."
+          "en": "This change shouldn't affect existing data.",
+          "pt-PT": "Esta alteração não deve afetar os dados existentes."
         },
         {
           "ru": "Сохрани резервную копию перед обновлением.",
-          "en": "Make a backup before updating."
+          "en": "Make a backup before updating.",
+          "pt-PT": "Faz uma cópia de segurança antes de atualizares."
         },
         {
           "ru": "Тесты проходят локально.",
-          "en": "The tests pass locally."
+          "en": "The tests pass locally.",
+          "pt-PT": "Os testes passam localmente."
         },
         {
           "ru": "Я хочу сравнить два подхода.",
-          "en": "I want to compare two approaches."
+          "en": "I want to compare two approaches.",
+          "pt-PT": "Quero comparar duas abordagens."
         },
         {
           "ru": "Это решение слишком сложное для такой задачи.",
-          "en": "This solution is too complicated for this task."
+          "en": "This solution is too complicated for this task.",
+          "pt-PT": "Esta solução é demasiado complicada para esta tarefa."
         },
         {
           "ru": "Давай сначала сделаем простой прототип.",
-          "en": "Let's build a simple prototype first."
+          "en": "Let's build a simple prototype first.",
+          "pt-PT": "Vamos começar por fazer um protótipo simples."
         },
         {
           "ru": "Нам нужна возможность работать без интернета.",
-          "en": "We need to be able to work offline."
+          "en": "We need to be able to work offline.",
+          "pt-PT": "Precisamos de conseguir trabalhar sem Internet."
         },
         {
           "ru": "Этот результат нужно проверить независимо.",
-          "en": "We need to verify this result independently."
+          "en": "We need to verify this result independently.",
+          "pt-PT": "É preciso verificar este resultado de forma independente."
         },
         {
           "ru": "Что произойдёт, если соединение пропадёт?",
-          "en": "What happens if the connection drops?"
+          "en": "What happens if the connection drops?",
+          "pt-PT": "O que acontece se a ligação cair?"
         },
         {
           "ru": "Мы можем автоматизировать этот процесс.",
-          "en": "We can automate this process."
+          "en": "We can automate this process.",
+          "pt-PT": "Podemos automatizar este processo."
         },
         {
           "ru": "Давай запишем решение в GitHub.",
-          "en": "Let's document the decision on GitHub."
+          "en": "Let's document the decision on GitHub.",
+          "pt-PT": "Vamos documentar a decisão no GitHub."
         }
       ]
     },
@@ -489,75 +597,93 @@
       "phrases": [
         {
           "ru": "Раньше я преподавал математику и физику.",
-          "en": "I used to teach mathematics and physics."
+          "en": "I used to teach mathematics and physics.",
+          "pt-PT": "Antes dava aulas de matemática e física."
         },
         {
           "ru": "Сначала разберём простой случай.",
-          "en": "Let's look at a simple case first."
+          "en": "Let's look at a simple case first.",
+          "pt-PT": "Vamos começar por analisar um caso simples."
         },
         {
           "ru": "Попробуй решить задачу самостоятельно.",
-          "en": "Try to solve the problem on your own."
+          "en": "Try to solve the problem on your own.",
+          "pt-PT": "Tenta resolver o problema sozinho."
         },
         {
           "ru": "Что известно из условия?",
-          "en": "What information are we given?"
+          "en": "What information are we given?",
+          "pt-PT": "Que dados nos são fornecidos no enunciado?"
         },
         {
           "ru": "Какие предположения мы делаем?",
-          "en": "What assumptions are we making?"
+          "en": "What assumptions are we making?",
+          "pt-PT": "Que pressupostos estamos a fazer?"
         },
         {
           "ru": "Давай нарисуем схему.",
-          "en": "Let's draw a diagram."
+          "en": "Let's draw a diagram.",
+          "pt-PT": "Vamos desenhar um esquema."
         },
         {
           "ru": "Это можно доказать от противного.",
-          "en": "We can prove this by contradiction."
+          "en": "We can prove this by contradiction.",
+          "pt-PT": "Podemos demonstrar isto por redução ao absurdo."
         },
         {
           "ru": "Нам нужно найти закономерность.",
-          "en": "We need to find a pattern."
+          "en": "We need to find a pattern.",
+          "pt-PT": "Precisamos de encontrar um padrão."
         },
         {
           "ru": "Не путай необходимое условие с достаточным.",
-          "en": "Don't confuse a necessary condition with a sufficient one."
+          "en": "Don't confuse a necessary condition with a sufficient one.",
+          "pt-PT": "Não confundas uma condição necessária com uma condição suficiente."
         },
         {
           "ru": "Этот вывод не следует из предположения.",
-          "en": "That conclusion doesn't follow from the assumption."
+          "en": "That conclusion doesn't follow from the assumption.",
+          "pt-PT": "Esta conclusão não decorre da hipótese."
         },
         {
           "ru": "Попробуй объяснить своими словами.",
-          "en": "Try to explain it in your own words."
+          "en": "Try to explain it in your own words.",
+          "pt-PT": "Tenta explicar pelas tuas próprias palavras."
         },
         {
           "ru": "Почему это верно для любого числа?",
-          "en": "Why does this hold for every number?"
+          "en": "Why does this hold for every number?",
+          "pt-PT": "Porque é que isto é válido para qualquer número?"
         },
         {
           "ru": "Мы можем проверить это на примере.",
-          "en": "We can check this with an example."
+          "en": "We can check this with an example.",
+          "pt-PT": "Podemos verificar isso com um exemplo."
         },
         {
           "ru": "Давай оценим порядок величины.",
-          "en": "Let's estimate the order of magnitude."
+          "en": "Let's estimate the order of magnitude.",
+          "pt-PT": "Vamos estimar a ordem de grandeza."
         },
         {
           "ru": "Это приближение работает не всегда.",
-          "en": "This approximation doesn't always work."
+          "en": "This approximation doesn't always work.",
+          "pt-PT": "Esta aproximação nem sempre funciona."
         },
         {
           "ru": "Важна не формула, а идея за ней.",
-          "en": "It's the idea behind the formula that matters."
+          "en": "It's the idea behind the formula that matters.",
+          "pt-PT": "O importante não é a fórmula, mas a ideia por trás dela."
         },
         {
           "ru": "Можешь придумать контрпример?",
-          "en": "Can you think of a counterexample?"
+          "en": "Can you think of a counterexample?",
+          "pt-PT": "Consegues pensar num contraexemplo?"
         },
         {
           "ru": "Теперь попробуем обобщить результат.",
-          "en": "Now let's try to generalize the result."
+          "en": "Now let's try to generalize the result.",
+          "pt-PT": "Agora vamos tentar generalizar o resultado."
         }
       ]
     },
@@ -569,75 +695,93 @@
       "phrases": [
         {
           "ru": "Я всё понимаю, но говорить мне трудно.",
-          "en": "I understand everything, but I find it hard to speak."
+          "en": "I understand everything, but I find it hard to speak.",
+          "pt-PT": "Eu percebo tudo, mas custa-me falar."
         },
         {
           "ru": "Я хочу говорить естественнее.",
-          "en": "I want to sound more natural."
+          "en": "I want to sound more natural.",
+          "pt-PT": "Quero falar de forma mais natural."
         },
         {
           "ru": "Не могли бы вы говорить чуть медленнее?",
-          "en": "Could you speak a little more slowly?"
+          "en": "Could you speak a little more slowly?",
+          "pt-PT": "Podia falar um pouco mais devagar, por favor?"
         },
         {
           "ru": "Повторите, пожалуйста, последнее предложение.",
-          "en": "Could you repeat the last sentence, please?"
+          "en": "Could you repeat the last sentence, please?",
+          "pt-PT": "Pode repetir a última frase, por favor?"
         },
         {
           "ru": "Как это сказать по-английски?",
-          "en": "How do you say that in English?"
+          "en": "How do you say that in English?",
+          "pt-PT": "Como se diz isto em inglês?"
         },
         {
           "ru": "Как произносится это слово?",
-          "en": "How do you pronounce this word?"
+          "en": "How do you pronounce this word?",
+          "pt-PT": "Como se pronuncia esta palavra?"
         },
         {
           "ru": "Есть более естественный способ это сказать?",
-          "en": "Is there a more natural way to say this?"
+          "en": "Is there a more natural way to say this?",
+          "pt-PT": "Há uma forma mais natural de dizer isto?"
         },
         {
           "ru": "Я знаю слово, но не могу его вспомнить.",
-          "en": "I know the word, but I can't remember it."
+          "en": "I know the word, but I can't remember it.",
+          "pt-PT": "Sei a palavra, mas não me consigo lembrar dela."
         },
         {
           "ru": "Я путаю эти два выражения.",
-          "en": "I keep mixing up these two expressions."
+          "en": "I keep mixing up these two expressions.",
+          "pt-PT": "Confundo estas duas expressões."
         },
         {
           "ru": "Исправляй меня, если я ошибаюсь.",
-          "en": "Please correct me if I make a mistake."
+          "en": "Please correct me if I make a mistake.",
+          "pt-PT": "Corrige-me se eu cometer algum erro."
         },
         {
           "ru": "Можно сказать то же самое проще?",
-          "en": "Can you say the same thing more simply?"
+          "en": "Can you say the same thing more simply?",
+          "pt-PT": "Podes dizer a mesma coisa de uma forma mais simples?"
         },
         {
           "ru": "Дай мне секунду подумать.",
-          "en": "Give me a second to think."
+          "en": "Give me a second to think.",
+          "pt-PT": "Dá-me um segundo para pensar."
         },
         {
           "ru": "Я попробую сказать это по-другому.",
-          "en": "I'll try to say it differently."
+          "en": "I'll try to say it differently.",
+          "pt-PT": "Vou tentar dizer isto de outra maneira."
         },
         {
           "ru": "Можешь сказать это ещё раз?",
-          "en": "Could you say that again?"
+          "en": "Could you say that again?",
+          "pt-PT": "Podes repetir isso?"
         },
         {
           "ru": "Я не знаю подходящего слова.",
-          "en": "I can't think of the right word."
+          "en": "I can't think of the right word.",
+          "pt-PT": "Não me lembro da palavra certa."
         },
         {
           "ru": "Давай потренируемся на коротких фразах.",
-          "en": "Let's practice with short sentences."
+          "en": "Let's practice with short sentences.",
+          "pt-PT": "Vamos praticar com frases curtas."
         },
         {
           "ru": "Я бы хотел говорить увереннее.",
-          "en": "I'd like to speak more confidently."
+          "en": "I'd like to speak more confidently.",
+          "pt-PT": "Gostava de falar com mais confiança."
         },
         {
           "ru": "Сегодня я выучил новое выражение.",
-          "en": "I learned a new expression today."
+          "en": "I learned a new expression today.",
+          "pt-PT": "Hoje aprendi uma expressão nova."
         }
       ]
     }

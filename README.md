@@ -1,6 +1,6 @@
 # MyWords Local
 
-Local-first personal English practice with **Vue 3 + Flask + SQLite**. Features: language islands, Focus (listening and repeating), Recall (remembering an English phrase from Russian), customizable browser speech and pauses, and manual ratings stored on device.
+Local-first personal English and European Portuguese practice with **Vue 3 + Flask + SQLite**. Features: language islands, Focus (listening and repeating), Recall (remembering a phrase in the selected language from Russian), customizable browser speech and pauses, and manual ratings stored on device.
 
 **This is a fresh public repository containing only the standalone application.** No personal database, earlier cloud app, private project history, research screenshots, login credentials, LLM service, or outbound user telemetry is included.
 
@@ -15,7 +15,7 @@ bash setup.sh
 
 Open http://127.0.0.1:8791/ on the same device. Use Ctrl+C to stop the server. **Do not expose the Flask port to the internet or a shared LAN**: it deliberately has no authentication.
 
-Words, scores, and review events remain in git-ignored `local.sqlite3`. The browser stores playback options in `localStorage`. Real Android speech depends on installed system voices and the screen remaining active.
+Words, language-specific scores, and review events remain in git-ignored `local.sqlite3`. The browser stores playback options in `localStorage`. Real Android speech depends on installed system voices and the screen remaining active.
 
 ## Develop with the GitHub CI gate
 
@@ -45,17 +45,48 @@ removes incomplete new copies after failures and leaves the original unchanged. 
 Keep the old checkout as an additional backup until you confirm all your islands
 and review counts on the new app. Do not copy old Git history, secrets or logs.
 
+## OPEN-2: shared islands in English and European Portuguese
+
+An island contains one list of Russian source thoughts, not a separate collection
+per target language. Use the language selector to switch between **English
+(en-US)** and **European Portuguese (pt-PT)**. Focus/Recall only show sentences
+with a translation available for that language; the editor displays all shared
+Russian thoughts and lets you add a missing translation separately.
+
+Every language has independent ratings and review events. Switching to
+Portuguese cannot change English progress, and vice versa.
+
+The existing `phrases` and English review rows are preserved by a one-time,
+idempotent schema upgrade on Flask startup. Before upgrading a populated legacy
+SQLite database, MyWords makes a *consistent private SQLite backup* next to
+the original: `local.sqlite3.before-multilingual.sqlite3`. This backup is
+git-ignored. The old English text and scores remain in legacy compatibility
+columns; the new `phrase_translations` table contains language-specific
+text/scores, and `review_events.language` tracks reviews separately.
+**Do not delete the private backup until you've checked your data.**
+
+European Portuguese TTS uses an explicitly detected `pt-PT` browser voice;
+it does not fall back silently to a Brazilian `pt-BR` voice. If no pt-PT
+voice is available on Android, the text/Recall modes still work, but audio
+is disabled until the voice is installed in Android's TTS settings. Open
+**Настройки → Звук → Обновить список голосов** after installing one.
+This is a device capability, not a server dependency.
+
 ## Optional ready-made islands
 
-The **Готовые острова** section in the catalog offers 8 curated Russian-to-English
-conversation packs (144 sentences). Open **Языковые острова**, preview the entire
+The **Готовые острова** section in the catalog offers 8 shared conversation packs (144 Russian source thoughts, 144 English
+and 144 European Portuguese versions). Open **Языковые острова**, preview the entire
 pack, and choose **Добавить в мои острова**. Nothing is installed automatically.
 A repeat import is idempotent: existing phrases, user-created islands, scores,
-and review events are not overwritten. You can practice any imported pack in
-the normal Focus/Recall screens. The packs are plain public JSON in
+and review events are not overwritten. For islands imported before Portuguese was
+available, press **Добавить недостающие переводы** in the catalog to attach
+144 language-specific versions without resetting your existing progress. You can practice any imported pack in
+the normal Focus/Recall screens in either target language. The packs are plain public JSON in
 `data/starter-islands.json`, not generated or fetched by an LLM.
 
 Levels are approximate learning labels, not certified CEFR assessments.
+The language exercise pack uses a literal translation of each Russian thought:
+it does not silently change references to English into Portuguese.
 You can keep adding your own sentences alongside any imported pack. The catalog
 endpoint is read-only; the local database changes only after an explicit
 import button press. No study history leaves the device.

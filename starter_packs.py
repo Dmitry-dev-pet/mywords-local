@@ -48,7 +48,9 @@ def load_starter_packs():
         for item in items:
             if not isinstance(item, dict):
                 raise ValueError("Invalid starter phrase")
-            for field in ("ru", "en"):
+            for field in ("ru", "en", "pt-PT"):
+                if field == "pt-PT" and field not in item:
+                    continue  # New topics can be translated gradually.
                 val = item.get(field)
                 if not isinstance(val, str) or not 1 <= len(val.strip()) <= 2000:
                     raise ValueError("Invalid starter phrase text")
@@ -61,7 +63,8 @@ def load_starter_packs():
 
 def list_starter_packs():
     return [
-        {**pack, "phrase_count": len(pack["phrases"]), "island_id": starter_island_id(pack["id"])}
+        {**pack, "phrase_count": len(pack["phrases"]), "island_id": starter_island_id(pack["id"]),
+         "available_languages": ["en-US"] + (["pt-PT"] if any(p.get("pt-PT") for p in pack["phrases"]) else [])}
         for pack in load_starter_packs()
     ]
 

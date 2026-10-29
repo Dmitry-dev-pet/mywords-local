@@ -2,6 +2,22 @@ import { createApp, ref, computed, onMounted, onBeforeUnmount, watch } from '/we
 import { buildPlaybackSteps, SpeechSequence } from '/web/audio-sequence.mjs';
 
 const SETTINGS_KEY = 'mywords.local.practice.v1';
+const LANGUAGE_KEY = 'mywords.local.target-language.v1';
+const VOICES_KEY = 'mywords.local.voices.v1';
+function loadLanguage() {
+  try { return localStorage.getItem(LANGUAGE_KEY) === 'pt-PT' ? 'pt-PT' : 'en-US'; }
+  catch { return 'en-US'; }
+}
+function loadVoicePreferences() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(VOICES_KEY) || '{}');
+    return {
+      'en-US': typeof stored['en-US'] === 'string' ? stored['en-US'] : '',
+      'pt-PT': typeof stored['pt-PT'] === 'string' ? stored['pt-PT'] : '',
+    };
+  } catch { return { 'en-US': '', 'pt-PT': '' }; }
+}
+
 const DEFAULT_SETTINGS = Object.freeze({ rate: 0.85, repeats: 2, pauseMs: 1000, order: 'en', languagePauseMs: 500 });
 
 function loadSettings() {
@@ -32,6 +48,14 @@ createApp({
     const ready = ref(true);
     const error = ref('');
     const islands = ref([]);
+    const selectedLanguage = ref(loadLanguage());
+    const languageName = computed(() => selectedLanguage.value === 'pt-PT' ? 'Português (Portugal)' : 'English');
+    const voicePreferences = ref(loadVoicePreferences());
+    const voices = ref([]);
+    const matchingVoices = computed(() => voices.value.filter(v =>
+      v.lang?.toLowerCase().replace('_', '-') === selectedLanguage.value.toLowerCase()));
+    const preferredVoice = computed(() => matchingVoices.value.find(
+      v => v.voiceURI === voicePreferences.value[selectedLanguage.value]) || matchingVoices.value[0] || null);
     const starterPacks = ref([]);
     const importingPresetId = ref(null);
     const starterMessage = ref('');
@@ -49,12 +73,15 @@ createApp({
     const settings = ref(loadSettings());
     const newIsland = ref('');
     const newRu = ref('');
-    const newEn = ref('');
+    const newTarget = ref('');
+    const editingPhraseId = ref(null);
+    const translationDraft = ref('');
     const selectedIsland = computed(() => islands.value.find(x => x.id === selectedId.value));
-    const currentIndex = computed(() => phrases.value.findIndex(x => x.id === currentId.value));
-    const currentPhrase = computed(() => phrases.value[currentIndex.value] || null);
-    const practiced = computed(() => phrases.value.filter(x => x.review_count > 0).length);
-    const mastered = computed(() => phrases.value.filter(x => x.mastery === 2 && x.review_count > 0).length);
+    const availablePhrases = computed(() => phrases.value.filter(x => !!x.target));
+    const currentIndex = computed(() => availablePhrases.value.findIndex(x => x.id === currentId.value));
+    const currentPhrase = computed(() => availablePhrases.value[currentIndex.value] || null);
+    const practiced = computed(() => availablePhrases.value.filter(x => x.review_count > 0).length);
+    const mastered = computed(() => availablePhrases.value.filter(x => x.mastery === 2 && x.review_count > 0).length);
     const scoreLabel = computed(() => {
       const phrase = currentPhrase.value;
       if (!phrase || !phrase.review_count) return 'Ещё не оценено';
@@ -69,7 +96,7 @@ createApp({
       Utterance: window.SpeechSynthesisUtterance,
       onState: active => { playing.value = active; },
       onProgress: step => {
-        const phrase = phrases.value[step.index];
+        const phrase = availablePhrases.value[step.index];
         if (!phrase || phrase.id !== step.phraseId) {
           stopAudio();
           return;
@@ -79,8 +106,8 @@ createApp({
           try { currentId.value = phrase.id; }
           finally { advancingFromPlayback = false; }
         }
-        const language = step.lang === 'ru-RU' ? 'Русский' : 'Английский';
-        audioStatus.value = 'Фраза ' + (step.index + 1) + '/' + phrases.value.length
+        const language = step.lang === 'ru-RU' ? 'Русский' : step.lang === 'pt-PT' ? 'Португальский' : 'Английский';
+        audioStatus.value = 'Фраза ' + (step.index + 1) + '/' + availablePhrases.value.length
           + ' · ' + language + ' · повтор ' + step.repetition + '/' + step.repeats;
       },
       onFinish: () => { audioStatus.value = 'Воспроизведение завершено'; },
@@ -94,6 +121,10 @@ createApp({
       },
     });
 
+    function refreshVoices() {
+      try { voices.value = window.speechSynthesis?.getVoices?.() || []; }
+      catch { voices.value = []; }
+    }
     function stopAudio() {
       player.stop();
       playing.value = false;
@@ -104,10 +135,15 @@ createApp({
     function play(scope = 'phrase') {
       stopAudio();
       error.value = '';
-      const steps = buildPlaybackSteps(phrases.value, {
+      if (selectedLanguage.value === 'pt-PT' && !preferredVoice.value) {
+        error.value = 'Не найден голос Português (Portugal), pt-PT. Установи европейский голос в Android, затем нажми «Обновить голоса» в настройках. Бразильский голос не подставляется.';
+        return;
+      }
+      const steps = buildPlaybackSteps(availablePhrases.value, {
         startIndex: currentIndex.value, scope, ...settings.value,
+        language: selectedLanguage.value,
       });
-      player.start(steps, settings.value.rate);
+      player.start(steps, settings.value.rate, preferredVoice.value);
     }
 
     async function run(work) {
@@ -120,13 +156,14 @@ createApp({
       const freshIslands = await api('/api/islands');
       const id = freshIslands.some(x => x.id === preferredIsland)
         ? preferredIsland : freshIslands[0]?.id || null;
-      const freshPhrases = id ? await api(`/api/islands/${id}/phrases`) : [];
-      if (seq !== requestSeq) return;
+      const language = selectedLanguage.value;
+      const freshPhrases = id ? await api(`/api/islands/${id}/phrases?language=${encodeURIComponent(language)}`) : [];
+      if (seq !== requestSeq || language !== selectedLanguage.value) return;
       islands.value = freshIslands;
       selectedId.value = id;
       phrases.value = freshPhrases;
-      if (!freshPhrases.some(x => x.id === currentId.value)) {
-        currentId.value = freshPhrases[0]?.id || null;
+      if (!freshPhrases.some(x => x.id === currentId.value && !!x.target)) {
+        currentId.value = freshPhrases.find(x => !!x.target)?.id || null;
       }
     }
     function openCatalog() {
@@ -178,6 +215,9 @@ createApp({
       phrases.value = [];
       run(() => refresh(id));
     }
+    function starterText(phrase) {
+      return selectedLanguage.value === 'pt-PT' ? (phrase['pt-PT'] || 'Перевод пока не добавлен') : phrase.en;
+    }
     function starterInstalled(pack) {
       return islands.value.some(island => island.id === pack.island_id);
     }
@@ -191,9 +231,9 @@ createApp({
           method: 'POST',
         });
         await refresh(result.island_id);
-        starterMessage.value = result.added
-          ? 'Добавлено ' + result.added + ' фраз. Теперь остров можно открыть и тренировать.'
-          : 'Этот набор уже добавлен. Твои оценки не изменились.';
+        starterMessage.value = result.added || result.added_translations
+          ? 'Добавлено ' + result.added + ' новых мыслей и ' + result.added_translations + ' языковых вариантов. Оценки сохранены.'
+          : 'Все доступные варианты уже добавлены. Твои оценки не изменились.';
       } catch (e) {
         error.value = e.message || String(e);
       } finally {
@@ -215,12 +255,32 @@ createApp({
     function addPhrase() {
       run(async () => {
         const phrase = await api(`/api/islands/${selectedId.value}/phrases`, {
-          method: 'POST', body: JSON.stringify({ ru: newRu.value, en: newEn.value }),
+          method: 'POST', body: JSON.stringify({
+            ru: newRu.value, target: newTarget.value, language: selectedLanguage.value,
+          }),
         });
-        newRu.value = ''; newEn.value = '';
+        newRu.value = ''; newTarget.value = '';
         await refresh();
         currentId.value = phrase.id;
         tab.value = 'practice';
+      });
+    }
+    function startTranslation(id) {
+      editingPhraseId.value = id;
+      translationDraft.value = '';
+    }
+    function saveTranslation() {
+      const phraseId = editingPhraseId.value;
+      run(async () => {
+        await api(`/api/phrases/${phraseId}/translations`, {
+          method: 'POST', body: JSON.stringify({
+            language: selectedLanguage.value, target: translationDraft.value,
+          }),
+        });
+        editingPhraseId.value = null;
+        translationDraft.value = '';
+        await refresh();
+        currentId.value = phraseId;
       });
     }
     function mark(mastery) {
@@ -228,7 +288,7 @@ createApp({
       if (!phrase) return;
       run(async () => {
         const updated = await api(`/api/phrases/${phrase.id}/review`, {
-          method: 'PATCH', body: JSON.stringify({ mastery }),
+          method: 'PATCH', body: JSON.stringify({ mastery, language: selectedLanguage.value }),
         });
         // Do not jump the card: the saved score remains visible until Next.
         const row = phrases.value.find(x => x.id === phrase.id);
@@ -236,10 +296,10 @@ createApp({
       });
     }
     function go(delta) {
-      if (!phrases.value.length) return;
+      if (!availablePhrases.value.length) return;
       const index = currentIndex.value < 0 ? 0 : currentIndex.value;
-      const next = Math.min(phrases.value.length - 1, Math.max(0, index + delta));
-      currentId.value = phrases.value[next].id;
+      const next = Math.min(availablePhrases.value.length - 1, Math.max(0, index + delta));
+      currentId.value = availablePhrases.value[next].id;
     }
     function practicePhrase(id) {
       currentId.value = id;
@@ -251,12 +311,26 @@ createApp({
       if (!advancingFromPlayback) stopAudio();
     }, { flush: 'sync' });
     watch([selectedId, mode, tab], () => { stopAudio(); revealed.value = false; });
+    watch(selectedLanguage, language => {
+      try { localStorage.setItem(LANGUAGE_KEY, language); } catch { /* private storage */ }
+      stopAudio();
+      currentId.value = null;
+      editingPhraseId.value = null;
+      translationDraft.value = '';
+      run(() => refresh());
+    });
+    watch(voicePreferences, prefs => {
+      stopAudio();
+      try { localStorage.setItem(VOICES_KEY, JSON.stringify(prefs)); } catch { /* storage */ }
+    }, { deep: true });
     watch(settings, (value) => {
       stopAudio();
       try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(value)); } catch { /* storage may be disabled */ }
     }, { deep: true });
     onMounted(() => {
       window.addEventListener('keydown', onKeyDown);
+      refreshVoices();
+      window.speechSynthesis?.addEventListener?.('voiceschanged', refreshVoices);
       run(async () => {
         await refresh();
         starterPacks.value = await api('/api/starter-islands');
@@ -265,14 +339,17 @@ createApp({
     });
     onBeforeUnmount(() => {
       window.removeEventListener('keydown', onKeyDown);
+      window.speechSynthesis?.removeEventListener?.('voiceschanged', refreshVoices);
       stopAudio();
     });
 
-    return { ready, error, islands, starterPacks, importingPresetId, starterMessage,
-      starterInstalled, importPreset, selectedId, selectedIsland, phrases,
+    return { ready, error, islands, selectedLanguage, languageName, matchingVoices,
+      voicePreferences, refreshVoices, starterPacks, importingPresetId, starterMessage,
+      starterText, starterInstalled, importPreset, selectedId, selectedIsland, phrases, availablePhrases,
       currentPhrase, currentIndex, practiced, mastered, scoreLabel,
       tab, mode, revealed, playing, audioStatus, settings, navOpen, settingsOpen, settingsTab,
-      newIsland, newRu, newEn, selectIsland, createIsland, addPhrase,
+      newIsland, newRu, newTarget, editingPhraseId, translationDraft, startTranslation,
+      saveTranslation, selectIsland, createIsland, addPhrase,
       mark, go, practicePhrase, play, stopAudio, openCatalog, openEditor, showPractice,
       openIsland, openSettings, toggleDualAudio };
   },
