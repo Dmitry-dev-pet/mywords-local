@@ -32,7 +32,7 @@ jobs:
           copy_verified() {
             local name="$1" id="$2" expected="$3"
             local output="data/kokoro-voicepacks-v1/$name.zip"
-            gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" --output "$output"
+            gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" > "$output"
             printf '%s  %s\n' "$expected" "$output" | sha256sum --check --status
             echo "Verified $name: $(stat -c %s "$output") bytes"
           }
