@@ -1,8 +1,8 @@
 /**
- * @typedef {{id: string, ru: string, en: string}} Phrase
+ * @typedef {{id: string, ru: string, en?: string, target?: string | null}} Phrase
  * @typedef {{kind: "pause", ms: number} | {kind: "speech", text: string, lang: string, index: number, phraseId: string, repetition: number, repeats: number}} PlaybackStep
  * @typedef {{speak: (utterance: SpeechUtterance) => void, cancel?: () => void, speaking?: boolean, pending?: boolean}} SpeechSynthesisPort
- * @typedef {{text: string, lang: string, rate: number, onstart?: () => void, onend?: () => void, onerror?: (event: {error: string}) => void}} SpeechUtterance
+ * @typedef {{text: string, lang: string, rate: number, voice?: SpeechSynthesisVoice, onstart?: () => void, onend?: () => void, onerror?: (event: {error: string}) => void}} SpeechUtterance
  * @typedef {{synthesis?: SpeechSynthesisPort, Utterance?: new (text: string) => SpeechUtterance, schedule?: (callback: () => void, ms: number) => number, unschedule?: (timer: number) => void, onProgress?: (step: PlaybackStep) => void, onState?: (active: boolean) => void, onFinish?: () => void, onError?: (error: string) => void, onRecovery?: () => void, watchdogIntervalMs?: number}} SpeechSequenceOptions
  */
 /**
@@ -11,15 +11,16 @@
  */
 /**
  * @param {Phrase[]} phrases
- * @param {{startIndex?: number, scope?: "phrase" | "island", order?: "en" | "ru-en", repeats?: number, pauseMs?: number, languagePauseMs?: number}} [options]
+ * @param {{startIndex?: number, scope?: "phrase" | "island", order?: "en" | "ru-en", repeats?: number, pauseMs?: number, languagePauseMs?: number, language?: "en-US" | "pt-PT"}} [options]
  * @returns {PlaybackStep[]}
  */
 export function buildPlaybackSteps(phrases, {
   startIndex = 0, scope = 'phrase', order = 'en', repeats = 2,
-  pauseMs = 1000, languagePauseMs = 500,
+  pauseMs = 1000, languagePauseMs = 500, language = 'en-US',
 } = {}) {
   if (!Array.isArray(phrases) || !phrases.length) return [];
   if (!Number.isInteger(startIndex) || startIndex < 0 || startIndex >= phrases.length) return [];
+  if (!['en-US', 'pt-PT'].includes(language)) throw new RangeError('Unsupported language');
   if (!['phrase', 'island'].includes(scope)) throw new RangeError('Unsupported playlist scope');
   if (!['en', 'ru-en'].includes(order)) throw new RangeError('Unsupported language order');
   if (!Number.isInteger(repeats) || repeats < 1 || repeats > 5) throw new RangeError('Invalid repeats');
@@ -31,13 +32,17 @@ export function buildPlaybackSteps(phrases, {
   const result = [];
   for (let index = startIndex; index <= lastIndex; index++) {
     const phrase = phrases[index];
-    if (typeof phrase?.en !== 'string' || !phrase.en.trim()) continue;
+    const target = phrase?.target === undefined
+      ? (language === 'en-US' ? phrase?.en : null)
+      : phrase.target;
+    // Never play English as an implicit fallback for untranslated Portuguese.
+    if (typeof target !== 'string' || !target.trim()) continue;
     for (let repetition = 1; repetition <= repeats; repetition++) {
       if (order === 'ru-en' && typeof phrase.ru === 'string' && phrase.ru.trim()) {
         result.push({ kind: 'speech', text: phrase.ru, lang: 'ru-RU', index, phraseId: phrase.id, repetition, repeats });
         if (languagePauseMs) result.push({ kind: 'pause', ms: languagePauseMs });
       }
-      result.push({ kind: 'speech', text: phrase.en, lang: 'en-US', index, phraseId: phrase.id, repetition, repeats });
+      result.push({ kind: 'speech', text: target, lang: language, index, phraseId: phrase.id, repetition, repeats });
       if ((repetition < repeats || index < lastIndex) && pauseMs) {
         result.push({ kind: 'pause', ms: pauseMs });
       }
@@ -75,6 +80,8 @@ export class SpeechSequence {
     this.steps = [];
     this.position = 0;
     this.rate = 0.85;
+    /** @type {SpeechSynthesisVoice | null} */
+    this.voice = null;
   }
 
   _clearWatchdog() {
@@ -101,8 +108,9 @@ export class SpeechSequence {
 
   /** @param {PlaybackStep[]} steps
    * @param {number} [rate]
+   * @param {SpeechSynthesisVoice | null} [voice]
    */
-  start(steps, rate = 0.85) {
+  start(steps, rate = 0.85, voice = null) {
     this.stop();
     if (!steps.length) return false;
     if (!this.synthesis?.speak || !this.Utterance) {
@@ -111,6 +119,7 @@ export class SpeechSequence {
     }
     this.steps = steps.slice();
     this.rate = rate;
+    this.voice = voice;
     this.active = true;
     this.onState(true);
     this._advance(this.token);
@@ -143,6 +152,9 @@ export class SpeechSequence {
     const utterance = new Constructor(step.text);
     utterance.lang = step.lang;
     utterance.rate = this.rate;
+    if (this.voice && this.voice.lang.toLowerCase().replace('_', '-') === step.lang.toLowerCase()) {
+      utterance.voice = this.voice;
+    }
     let settled = false;
     let observedStart = false;
     let silentSamples = 0;
