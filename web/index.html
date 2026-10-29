@@ -381,8 +381,17 @@
             {{ voicePackPreview.voice_id }} · {{ voicePackPreview.files }} записей ·
             {{ Math.round(voicePackPreview.bytes/1024) }} КБ · {{ voicePackPreview.state }}
           </div>
+          <div v-if="voicePackPreview?.requires_openrail" class="setting-group">
+            <details>
+              <summary>Лицензия OpenRAIL для русского голоса — прочитать перед установкой</summary>
+              <pre class="license-preview" style="max-height:230px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;">{{ voicePackPreview.license_text }}</pre>
+            </details>
+            <label><input type="checkbox" v-model="openrailAccepted">
+              Я прочитал условия OpenRAIL и согласен соблюдать ограничения использования.</label>
+          </div>
           <button v-if="voicePackPreview && voicePackPreview.state==='ready-to-install'"
-                  type="button" class="primary" :disabled="voicePackBusy"
+                  type="button" class="primary"
+                  :disabled="voicePackBusy || (voicePackPreview.requires_openrail && !openrailAccepted)"
                   @click="voicePackAction('install')">Установить проверенный пакет</button>
           <p v-if="voicePackMessage" role="status">{{ voicePackMessage }}</p>
         </div>
