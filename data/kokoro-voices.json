@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "source_corpus": "data/starter-islands.json",
+  "snapshot_date": "2026-10-29",
+  "models": {
+    "english": {
+      "repository": "hexgrad/Kokoro-82M",
+      "revision": "8542409da2986c0ab5d41b3cf0411f7a58caab38",
+      "license": "Apache-2.0",
+      "backend": "kokoro",
+      "checkpoint": "kokoro-v1_0.pth",
+      "source": "https://huggingface.co/hexgrad/Kokoro-82M/tree/8542409da2986c0ab5d41b3cf0411f7a58caab38/voices"
+    },
+    "russian": {
+      "repository": "zaakirio/kokoro-ru",
+      "revision": "d649c57b239b18c4c384378127cbf01dba039bc1",
+      "license": "OpenRAIL",
+      "backend": "kokoro-ru",
+      "release_status": "review-required",
+      "source": "https://huggingface.co/zaakirio/kokoro-ru"
+    },
+    "portuguese": {
+      "repository": "logus2k/kokoro_tts_eu_pt",
+      "revision": "dcf0404a6552e0cc2485446724091b4cd9b4cbae",
+      "license": "Apache-2.0",
+      "backend": "tts_eu_pt",
+      "source": "https://huggingface.co/logus2k/kokoro_tts_eu_pt"
+    }
+  },
+  "voices": [
+    {
+      "id": "af_alloy",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/af_alloy.pt"
+    },
+    {
+      "id": "af_aoede",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/af_aoede.pt"
+    },
+    {
+      "id": "af_bella",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/af_bella.pt"
+    },
+    {
+      "id": "af_heart",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/af_heart.pt"
+    },
+    {
+      "id": "af_jessica",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/af_jessica.pt"
+    },
+    {
+      "id": "af_kore",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/af_kore.pt"
+    },
+    {
+      "id": "af_nicole",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/af_nicole.pt"
+    },
+    {
+      "id": "af_nova",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/af_nova.pt"
+    },
+    {
+      "id": "af_river",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/af_river.pt"
+    },
+    {
+      "id": "af_sarah",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/af_sarah.pt"
+    },
+    {
+      "id": "af_sky",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/af_sky.pt"
+    },
+    {
+      "id": "am_adam",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/am_adam.pt"
+    },
+    {
+      "id": "am_echo",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/am_echo.pt"
+    },
+    {
+      "id": "am_eric",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/am_eric.pt"
+    },
+    {
+      "id": "am_fenrir",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/am_fenrir.pt"
+    },
+    {
+      "id": "am_liam",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/am_liam.pt"
+    },
+    {
+      "id": "am_michael",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/am_michael.pt"
+    },
+    {
+      "id": "am_onyx",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/am_onyx.pt"
+    },
+    {
+      "id": "am_puck",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/am_puck.pt"
+    },
+    {
+      "id": "am_santa",
+      "locale": "en-US",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/am_santa.pt"
+    },
+    {
+      "id": "bf_alice",
+      "locale": "en-GB",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/bf_alice.pt"
+    },
+    {
+      "id": "bf_emma",
+      "locale": "en-GB",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/bf_emma.pt"
+    },
+    {
+      "id": "bf_isabella",
+      "locale": "en-GB",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/bf_isabella.pt"
+    },
+    {
+      "id": "bf_lily",
+      "locale": "en-GB",
+      "model": "english",
+      "gender": "female",
+      "voice_file": "voices/bf_lily.pt"
+    },
+    {
+      "id": "bm_daniel",
+      "locale": "en-GB",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/bm_daniel.pt"
+    },
+    {
+      "id": "bm_fable",
+      "locale": "en-GB",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/bm_fable.pt"
+    },
+    {
+      "id": "bm_george",
+      "locale": "en-GB",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/bm_george.pt"
+    },
+    {
+      "id": "bm_lewis",
+      "locale": "en-GB",
+      "model": "english",
+      "gender": "male",
+      "voice_file": "voices/bm_lewis.pt"
+    },
+    {
+      "id": "sveta",
+      "locale": "ru-RU",
+      "model": "russian",
+      "gender": "female",
+      "voice_file": "voices/sveta.pt",
+      "checkpoint": "kokoro-ru-v2-base.pth"
+    },
+    {
+      "id": "masha",
+      "locale": "ru-RU",
+      "model": "russian",
+      "gender": "female",
+      "voice_file": "voices/masha.pt",
+      "checkpoint": "kokoro-ru-v2-base.pth"
+    },
+    {
+      "id": "dima",
+      "locale": "ru-RU",
+      "model": "russian",
+      "gender": "male",
+      "voice_file": "voices/dima.pt",
+      "checkpoint": "kokoro-ru-v2-dima.pth"
+    },
+    {
+      "id": "tuga_voicepack",
+      "locale": "pt-PT",
+      "model": "portuguese",
+      "gender": "unspecified",
+      "voice_file": "tuga_voicepack.pt",
+      "checkpoint": "tuga_kokoro.pth",
+      "existing_audio_pack": "web/audio/pt-PT-kokoro-v1"
+    }
+  ]
+}
