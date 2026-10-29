@@ -5,6 +5,11 @@ const SETTINGS_KEY = 'mywords.local.practice.v1';
 const LANGUAGE_KEY = 'mywords.local.target-language.v1';
 const VOICES_KEY = 'mywords.local.voices.v1';
 const KOKORO_KEY = 'mywords.local.kokoro.v1';
+const RU_LICENSE_KEY = 'mywords.local.kokoro-ru-license.v1';
+function ruLicensePreviouslyAccepted() {
+  try { return localStorage.getItem(RU_LICENSE_KEY) === 'accepted'; }
+  catch { return false; }
+}
 function loadKokoroPreferences() {
   try {
     const stored = JSON.parse(localStorage.getItem(KOKORO_KEY) || '{}');
@@ -63,7 +68,10 @@ createApp({
     const voiceCatalog = ref([]);
     const initialKokoro = loadKokoroPreferences();
     const selectedAudioVoice = ref(initialKokoro.en);
-    const selectedRuVoice = ref(initialKokoro.ru);
+    const russianLicenseAccepted = ref(ruLicensePreviouslyAccepted());
+    const selectedRuVoice = ref(russianLicenseAccepted.value ? initialKokoro.ru : '');
+    const russianLicenseText = ref('');
+    const russianLicenseError = ref('');
     const uploadedVoiceFile = ref(null);
     const voicePackPreview = ref(null);
     const openrailAccepted = ref(false);
@@ -170,8 +178,20 @@ createApp({
       if (!selectedAudioVoice.value) {
         selectedAudioVoice.value = englishKokoroVoices.value.find(v => v.installed)?.id || '';
       }
-      if (!selectedRuVoice.value) {
+      if (!russianLicenseAccepted.value) selectedRuVoice.value = '';
+      else if (!selectedRuVoice.value) {
         selectedRuVoice.value = russianKokoroVoices.value.find(v => v.installed)?.id || '';
+      }
+    }
+    async function loadRussianLicense() {
+      russianLicenseError.value = '';
+      try {
+        const voice = russianKokoroVoices.value.find(v => v.installed);
+        if (!voice) throw new Error('Русские аудиопакеты пока недоступны');
+        const document = await api('/api/voice-packs/' + encodeURIComponent(voice.id) + '/license');
+        russianLicenseText.value = document.license_text;
+      } catch (e) {
+        russianLicenseError.value = e.message || String(e);
       }
     }
     function selectVoiceFile(event) {
@@ -232,7 +252,10 @@ createApp({
         startIndex: currentIndex.value, scope, ...settings.value,
         language: selectedLanguage.value,
         audioRequired: selectedLanguage.value === 'en-US' && !!selectedAudioVoice.value,
-        ruAudioRequired: settings.value.order === 'ru-en' && !!selectedRuVoice.value,
+        // If prerecorded Russian clips are installed, never silently use
+        // system TTS before accepting the bundled OpenRAIL terms.
+        ruAudioRequired: settings.value.order === 'ru-en' &&
+          (russianKokoroVoices.value.some(v => v.installed) || !!selectedRuVoice.value),
       });
       player.start(steps, settings.value.rate, preferredVoice.value);
     }
@@ -414,6 +437,13 @@ createApp({
       translationDraft.value = '';
       run(() => refresh());
     });
+    watch(russianLicenseAccepted, accepted => {
+      try { localStorage.setItem(RU_LICENSE_KEY, accepted ? 'accepted' : ''); } catch { /* storage disabled */ }
+      if (!accepted) selectedRuVoice.value = '';
+      else if (!selectedRuVoice.value) {
+        selectedRuVoice.value = russianKokoroVoices.value.find(v => v.installed)?.id || '';
+      }
+    });
     watch([selectedAudioVoice, selectedRuVoice], ([en, ru]) => {
       stopAudio();
       try { localStorage.setItem(KOKORO_KEY, JSON.stringify({ en, ru })); } catch { /* storage disabled */ }
@@ -450,6 +480,7 @@ createApp({
     return { ready, error, islands, selectedLanguage, languageName, matchingVoices,
       voicePreferences, refreshVoices, starterPacks, audioPack, audioPackError, audioPackState, importingPresetId, starterMessage,
       voiceCatalog, englishKokoroVoices, russianKokoroVoices, selectedAudioVoice, selectedRuVoice,
+      russianLicenseAccepted, russianLicenseText, russianLicenseError, loadRussianLicense,
       uploadedVoiceFile, voicePackPreview, voicePackBusy, voicePackMessage, openrailAccepted,
       selectVoiceFile, voicePackAction,
       starterText, starterInstalled, importPreset, selectedId, selectedIsland, phrases, availablePhrases,
