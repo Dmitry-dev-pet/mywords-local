@@ -320,7 +320,31 @@ def encode_voice_audio(wav: Path, mp3: Path) -> dict:
             return {"mode": mode, "compression": result}
         except ValueError:
             continue
-    raise ValueError(f"Cannot meet strict normalization even after documented compression: {mp3.name}")
+    # Dynamic, oversampled soft-clip stage is used ONLY for rare,
+    # extraordinarily high-crest clips where earlier bounded compression
+    # still cannot meet the existing -20..-16 LUFS and true-peak limits.
+    # The source remains the original full WAV; this avoids cumulative
+    # compression and retains consonants. Actual QA runs on the MP3.
+    from tools.generate_ptpt_audio import audio_qa
+    for gain_db, threshold in ((6, 0.2), (9, 0.2), (12, 0.15), (12, 0.1)):
+        filters = (
+            f"volume={gain_db}dB,"
+            f"asoftclip=type=tanh:threshold={threshold}:oversample=4,"
+            "loudnorm=I=-18:TP=-2:LRA=7"
+        )
+        run(["ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
+             "-i", str(wav), "-af", filters, "-ar", "24000", "-ac", "1",
+             "-map_metadata", "-1", "-codec:a", "libmp3lame",
+             "-b:a", "64k", str(mp3)])
+        try:
+            audio_qa(mp3)
+            mode = f"oversampled-softclip-gain{gain_db}-threshold{threshold}"
+            print(f"AUDIO_QA_FALLBACK {mp3.name} mode={mode}; LISTENING_QA_REQUIRED", flush=True)
+            return {"mode": mode, "gain_db": gain_db, "threshold": threshold,
+                    "oversample": 4, "listening_review_required": True}
+        except ValueError:
+            continue
+    raise ValueError(f"Cannot meet strict normalization even after documented fallbacks: {mp3.name}")
 
 def generate(name: str, *, output: Path = OUTPUT, sample: int = 0) -> dict:
     voice_data = catalog()
