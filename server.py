@@ -19,7 +19,8 @@ def create_app(database=None, voice_root=None):
     app.config['MAX_CONTENT_LENGTH'] = MAX_ZIP_BYTES + 1024 * 1024
     store = Store(database or os.environ.get('MYWORDS_TEST_DB') or (ROOT / 'local.sqlite3'))
     audio_catalog = AudioCatalog()
-    voice_library = VoicePackLibrary(root=voice_root if voice_root is not None else INSTALLED_ROOT,
+    voice_library = VoicePackLibrary(root=voice_root if voice_root is not None
+                                     else os.environ.get('MYWORDS_TEST_VOICE_ROOT', INSTALLED_ROOT),
                                      pt_catalog=audio_catalog)
 
     @app.errorhandler(Exception)
