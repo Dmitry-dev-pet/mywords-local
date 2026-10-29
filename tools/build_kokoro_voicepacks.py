@@ -187,7 +187,7 @@ def synth_for_voice(voice: dict, model_info: dict):
     """Construct a pinned Kokoro synthesizer. Optional deps only at generation time."""
     import numpy as np
     import torch
-    from huggingface_hub import hf_hub_download
+    from huggingface_hub import hf_hub_download, snapshot_download
     from kokoro import KModel, KPipeline
 
     repo, rev = model_info["repository"], model_info["revision"]
@@ -205,7 +205,8 @@ def synth_for_voice(voice: dict, model_info: dict):
         if files[model_info["checkpoint"]] != "496dba118d1a58f5f3db2efc88dbdc216e0483fc89fe6e47ee1f2c53f18ad1e4":
             raise ValueError("Unexpected English model weight checksum")
         voice_file = pinned(voice["voice_file"])
-        km = KModel(repo_id=repo, model=str(checkpoint)).eval()
+        model_config = pinned("config.json")
+        km = KModel(repo_id=repo, config=str(model_config), model=str(checkpoint)).eval()
         pipe = KPipeline(lang_code="a" if voice["locale"] == "en-US" else "b",
                          repo_id=repo, model=km, device="cpu")
 
@@ -223,20 +224,45 @@ def synth_for_voice(voice: dict, model_info: dict):
     if voice["model"] == "russian":
         checkpoint = pinned(voice["checkpoint"])
         voice_file = pinned(voice["voice_file"])
-        g2p_file = pinned("ru_g2p.py")
-        # This is pinned third-party code. Review its dependencies and licensing
-        # before running it in an isolated generation environment.
-        spec = importlib.util.spec_from_file_location("mywords_pinned_ru_g2p", g2p_file)
+        # The pinned Russian frontend explicitly requires its accompanying
+        # acute-aware espeak-data and kokoro-config.json. Download ONLY
+        # those assets, then copy out of Hugging Face cache symlinks so
+        # Path(__file__).resolve().parent finds its real espeak-data directory.
+        frontend_snapshot = Path(snapshot_download(
+            repo_id=repo, revision=rev,
+            allow_patterns=["ru_g2p.py", "kokoro-config.json", "espeak-data/**"]))
+        for asset in ("ru_g2p.py", "kokoro-config.json"):
+            path = frontend_snapshot / asset
+            if not path.is_file():
+                raise ValueError(f"Missing pinned Russian frontend asset: {asset}")
+            files[asset] = digest(path)
+        project_espeak = frontend_snapshot / "espeak-data"
+        if not (project_espeak / "ru_dict").is_file():
+            raise ValueError("Pinned acute-aware Russian espeak dictionary absent")
+        frontend_handle = tempfile.TemporaryDirectory(prefix="mywords-ru-g2p-")
+        frontend_root = Path(frontend_handle.name)
+        shutil.copy2(frontend_snapshot / "ru_g2p.py", frontend_root / "ru_g2p.py")
+        shutil.copy2(frontend_snapshot / "kokoro-config.json", frontend_root / "kokoro-config.json")
+        shutil.copytree(project_espeak, frontend_root / "espeak-data", symlinks=False)
+        for asset in sorted((frontend_root / "espeak-data").rglob("*")):
+            if asset.is_file():
+                files[str(asset.relative_to(frontend_root))] = digest(asset)
+        # The pinned upstream G2P additionally needs RUAccent and its
+        # stress model. Keep this code strictly in the isolated generator.
+        spec = importlib.util.spec_from_file_location(
+            "mywords_pinned_ru_g2p", frontend_root / "ru_g2p.py")
         if spec is None or spec.loader is None:
             raise ValueError("Cannot load pinned Russian phonemizer")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         g2p = module.RuG2P()
-        km = KModel(repo_id=repo, model=str(checkpoint)).eval()
+        model_config = pinned("config.json")
+        km = KModel(repo_id=repo, config=str(model_config),
+                    model=str(checkpoint)).eval()
         # Weight-only loading: never unpickle arbitrary Python objects from a voicepack.
         pack = torch.load(voice_file, map_location="cpu", weights_only=True)
 
-        def speak(text):
+        def speak(text, _keep_frontend_alive=frontend_handle):
             phonemes, oov = g2p(text)
             if oov or not phonemes or len(phonemes) > 510:
                 raise ValueError(f"Unsupported Russian phonemes: {oov}")
