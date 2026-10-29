@@ -1,4 +1,4 @@
-"""Local-only, fail-closed installation of prerecordded PUBLIC starter voice ZIPs.
+"""Local-only, fail-closed installation of prerecorded PUBLIC starter voice ZIPs.
 
 Each archive has manifest.json and 144 <phrase-uuid>.mp3 at its root.
 The exact existing starter IDs/text and model/voice revisions are verified.
@@ -232,7 +232,10 @@ class VoicePackLibrary:
             if destination.exists() or destination.is_symlink():
                 raise InvalidVoicePack("Пакет уже существует")
             with tempfile.TemporaryDirectory(prefix=".voice-stage-", dir=self.root) as directory:
-                stage = Path(directory)
+                # Rename a child, not the TemporaryDirectory root, so cleanup
+                # succeeds after committing the validated directory.
+                stage = Path(directory) / "staged"
+                stage.mkdir()
                 with zipfile.ZipFile(BytesIO(archive_bytes)) as source:
                     for name in source.namelist():
                         (stage / name).write_bytes(source.read(name))
