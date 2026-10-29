@@ -335,15 +335,56 @@
           </div>
           <template v-else>
             <div class="setting-row voice-setting">
-              <div><strong>Голос изучаемого языка</strong><small>Английский — системный синтез речи</small></div>
+              <div><strong>Озвучка Kokoro · английский</strong>
+                <small>3 голоса, американский и британский. Без сети после установки.</small></div>
+              <select v-model="selectedAudioVoice" aria-label="Голос Kokoro для английского">
+                <option value="">Системный голос (старый режим)</option>
+                <option v-for="voice in englishKokoroVoices" :key="voice.id"
+                        :value="voice.id" :disabled="!voice.installed">
+                  {{ voice.id }} · {{ voice.locale }} {{ voice.installed ? '✓' : '(нужен ZIP)' }}
+                </option>
+                <option v-if="selectedAudioVoice && !englishKokoroVoices.some(v=>v.id===selectedAudioVoice && v.installed)"
+                        :value="selectedAudioVoice" disabled>Выбранный голос не установлен</option>
+              </select>
+            </div>
+            <div v-if="!selectedAudioVoice" class="setting-row voice-setting">
+              <div><strong>Голос Android / браузера</strong><small>Только для старого режима</small></div>
               <select v-model="voicePreferences[selectedLanguage]" aria-label="Голос изучаемого языка">
                 <option value="">Автоматически (подходящий голос)</option>
                 <option v-for="voice in matchingVoices" :key="voice.voiceURI"
                         :value="voice.voiceURI">{{ voice.name }} ({{ voice.lang }})</option>
               </select>
             </div>
-            <button type="button" class="outline-button voice-refresh" @click="refreshVoices">↻ Обновить список голосов</button>
           </template>
+          <div class="setting-row voice-setting">
+            <div><strong>Русский голос Kokoro</strong><small>Для режима «Двойное аудио»</small></div>
+            <select v-model="selectedRuVoice" aria-label="Голос Kokoro для русского">
+              <option value="">Системный русский голос (старый режим)</option>
+              <option v-for="voice in russianKokoroVoices" :key="voice.id"
+                      :value="voice.id" :disabled="!voice.installed">
+                {{ voice.id }} {{ voice.installed ? '✓' : '(нужен ZIP)' }}
+              </option>
+              <option v-if="selectedRuVoice && !russianKokoroVoices.some(v=>v.id===selectedRuVoice && v.installed)"
+                      :value="selectedRuVoice" disabled>Выбранный русский голос отсутствует</option>
+            </select>
+          </div>
+        </div>
+        <div class="setting-group">
+          <span class="setting-eyebrow">АУДИОПАКЕТ ZIP · ЛОКАЛЬНАЯ УСТАНОВКА</span>
+          <p>Файлы должны содержать 144 подготовленные записи для одного голоса.
+            Предварительная проверка не изменяет твою базу занятий.</p>
+          <input type="file" accept=".zip,application/zip" aria-label="Выбрать ZIP с голосом"
+                 @change="selectVoiceFile">
+          <button type="button" class="outline-button" :disabled="!uploadedVoiceFile || voicePackBusy"
+                  @click="voicePackAction('preview')">Проверить ZIP</button>
+          <div v-if="voicePackPreview" role="status">
+            {{ voicePackPreview.voice_id }} · {{ voicePackPreview.files }} записей ·
+            {{ Math.round(voicePackPreview.bytes/1024) }} КБ · {{ voicePackPreview.state }}
+          </div>
+          <button v-if="voicePackPreview && voicePackPreview.state==='ready-to-install'"
+                  type="button" class="primary" :disabled="voicePackBusy"
+                  @click="voicePackAction('install')">Установить проверенный пакет</button>
+          <p v-if="voicePackMessage" role="status">{{ voicePackMessage }}</p>
         </div>
         <div class="setting-group"><span class="setting-eyebrow">ВОСПРОИЗВЕДЕНИЕ</span>
           <div class="setting-row">
