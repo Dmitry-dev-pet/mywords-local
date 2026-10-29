@@ -22,6 +22,7 @@ from tools.build_kokoro_voicepacks import (
 
 ROOT = Path(__file__).resolve().parent
 INSTALLED_ROOT = ROOT / "local_voicepacks"
+BUNDLED_ROOT = ROOT / "data" / "kokoro-voicepacks-v1"
 
 MAX_ZIP_BYTES = 32 * 1024 * 1024
 MAX_UNCOMPRESSED_BYTES = 48 * 1024 * 1024
@@ -36,8 +37,9 @@ class InvalidVoicePack(ValueError):
 
 
 class VoicePackLibrary:
-    def __init__(self, root=INSTALLED_ROOT, pt_catalog=None):
+    def __init__(self, root=INSTALLED_ROOT, pt_catalog=None, bundled_root=None):
         self.root = Path(root)
+        self.bundled_root = Path(bundled_root) if bundled_root is not None else None
         self.pt_catalog = pt_catalog
         self.lock = threading.RLock()
         self.installed = {}
@@ -49,6 +51,30 @@ class VoicePackLibrary:
         for voice in configuration["voices"]:
             if voice["locale"] == "pt-PT":
                 continue  # The original committed Kokoro recordings are separate.
+            # Bundled ZIPs are tracked in the versioned app checkout.
+            # Read them directly, never unpack or mutate SQLite on startup.
+            if self.bundled_root is not None:
+                bundle = self.bundled_root / (voice["id"] + ".zip")
+                try:
+                    if (not self.bundled_root.is_symlink() and not bundle.is_symlink()
+                            and bundle.is_file() and 0 < bundle.stat().st_size <= MAX_ZIP_BYTES):
+                        raw = bundle.read_bytes()
+                        summary = self._validate_archive(raw)
+                        if summary["voice_id"] != voice["id"]:
+                            raise InvalidVoicePack("Bundled voice identity mismatch")
+                        with zipfile.ZipFile(BytesIO(raw)) as package:
+                            manifest = json.loads(package.read("manifest.json"))
+                        installed[voice["id"]] = {
+                            "manifest_hash": summary["manifest_sha256"],
+                            "locale": voice["locale"],
+                            "entries": {e["phrase_id"]: e for e in manifest["entries"]},
+                            "bundle_path": str(bundle),
+                        }
+                        continue
+                except (OSError, ValueError, TypeError, KeyError, zipfile.BadZipFile):
+                    # Missing/corrupt bundled media is never played; installed
+                    # fallback is verified independently below if available.
+                    pass
             directory = self.root / voice["id"]
             try:
                 if directory.exists() and not directory.is_symlink():
@@ -106,14 +132,26 @@ class VoicePackLibrary:
             item = self.installed.get(voice_id, {}).get("entries", {}).get(phrase_id)
         if item is None:
             return None
-        directory = self.root / voice_id
-        path = directory / (phrase_id + ".mp3")
-        if directory.is_symlink() or path.is_symlink() or not path.is_file():
-            return None
-        if path.stat().st_size != item["bytes"]:
-            return None
-        with path.open("rb") as stream:
-            data = stream.read(MAX_FILE_BYTES + 1)
+        with self.lock:
+            package_path = self.installed.get(voice_id, {}).get("bundle_path")
+        if package_path is not None:
+            path = Path(package_path)
+            try:
+                if path.is_symlink() or not path.is_file() or path.stat().st_size > MAX_ZIP_BYTES:
+                    return None
+                with zipfile.ZipFile(path) as package:
+                    data = package.read(phrase_id + ".mp3")
+            except (OSError, ValueError, KeyError, zipfile.BadZipFile, RuntimeError):
+                return None
+        else:
+            directory = self.root / voice_id
+            path = directory / (phrase_id + ".mp3")
+            if directory.is_symlink() or path.is_symlink() or not path.is_file():
+                return None
+            if path.stat().st_size != item["bytes"]:
+                return None
+            with path.open("rb") as stream:
+                data = stream.read(MAX_FILE_BYTES + 1)
         if (len(data) != item["bytes"]
                 or hashlib.sha256(data).hexdigest() != item["sha256"]):
             return None
