@@ -1,0 +1,49 @@
+name: Kokoro Russian 144-phrase OpenRAIL audio packs
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/kokoro-full-russian.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  russian-full:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/kokoro-all-voices-catalog'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        voice: [sveta, masha, dima]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install isolated CPU Kokoro and Russian G2P
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg espeak-ng
+          python -m pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install kokoro==0.9.4 "misaki[en]==0.9.4" soundfile numpy huggingface-hub ruaccent==1.5.8.3
+      - name: Generate full 144 Russian clips and pinned OpenRAIL license
+        env:
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          HF_HUB_DISABLE_XET: '1'
+          OMP_NUM_THREADS: '2'
+          TOKENIZERS_PARALLELISM: 'false'
+        run: |
+          python tools/build_kokoro_voicepacks.py --generate "${{ matrix.voice }}" --out "$RUNNER_TEMP/out"
+          python tools/build_kokoro_voicepacks.py --verify "$RUNNER_TEMP/out/${{ matrix.voice }}"
+          test -s "$RUNNER_TEMP/out/${{ matrix.voice }}/LICENSE-dialogs-openrail.md"
+      - name: Publish licensed ZIP artifact for offline install
+        uses: actions/upload-artifact@v4
+        with:
+          name: mywords-kokoro-144-${{ matrix.voice }}-OpenRAIL
+          path: ${{ runner.temp }}/out/${{ matrix.voice }}/
+          retention-days: 7
+          if-no-files-found: error
