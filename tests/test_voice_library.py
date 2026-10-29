@@ -97,6 +97,15 @@ class VoicePackZipTests(unittest.TestCase):
         self.assertIsNone(restarted.for_phrase(first["phrase_id"], first["source_text"], "pt-PT", "af_heart"))
         self.assertIsNone(restarted.media("af_heart", "../local.sqlite3"))
 
+    def test_british_voice_reuses_same_english_progress_identity(self):
+        archive = synthetic_zip("bf_emma")
+        self.assertEqual(self.manager.install(archive)["voice_id"], "bf_emma")
+        phrase = public_rows("en-US")[0]
+        self.assertIsNotNone(self.manager.for_phrase(
+            phrase["phrase_id"], phrase["source_text"], "en-US", "bf_emma"))
+        self.assertIsNone(self.manager.for_phrase(
+            phrase["phrase_id"], phrase["source_text"], "pt-PT", "bf_emma"))
+
     def test_rejected_corruption_never_installs_files(self):
         for args in ({"corrupt": True}, {"change_text": True},
                      {"unsafe_name": True}, {"symlink": True}):
