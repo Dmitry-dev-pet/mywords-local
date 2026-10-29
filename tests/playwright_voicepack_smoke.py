@@ -69,6 +69,7 @@ with tempfile.TemporaryDirectory(prefix="mywords-voice-browser-") as temp:
             page.goto(URL)
             page.locator(".focus-phrase").wait_for()
             page.locator(".toolbar-settings").click()
+            page.get_by_text("Дополнительно: ручной импорт других проверенных ZIP").click()
 
             file_input = page.get_by_label("Выбрать ZIP с голосом")
             file_input.set_input_files({
