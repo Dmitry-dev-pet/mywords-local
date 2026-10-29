@@ -87,7 +87,7 @@ with tempfile.TemporaryDirectory() as temp:
             page.locator('.target-language-select').select_option('pt-PT')
             page.locator('.focus-phrase').get_attribute('class')  # render completed
             page.wait_for_function("document.querySelector('.focus-phrase')?.textContent.includes('Estou a aprender')")
-            assert 'Ещё повторю' in page.locator('.evaluation-heading').inner_text()
+            assert 'Нужно повторить' in page.locator('.evaluation-heading').inner_text()
             page.reload()
             page.wait_for_function("document.querySelector('.focus-phrase')?.textContent.includes('Estou a aprender')")
             assert 'проверок: 1' in page.locator('.evaluation-heading').inner_text()
