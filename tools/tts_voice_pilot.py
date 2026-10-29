@@ -104,6 +104,9 @@ def encode_audio(wav_path, mp3_path):
     subprocess.run([
         "ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
         "-i", str(wav_path), "-vn", "-ac", "1",
+        # Level-match independent voices before human A/B listening.
+        # Avoid choosing Piper simply because Kokoro's original output is ~12 dB quieter.
+        "-af", "loudnorm=I=-18:TP=-2:LRA=7",
         "-codec:a", "libmp3lame", "-b:a", "64k", str(mp3_path),
     ], check=True)
     if mp3_path.stat().st_size < 1800:
@@ -139,6 +142,7 @@ def main():
             "engine": args.engine,
             "language": "pt-PT",
             "synthetic_audio": True,
+            "audio_postprocess": "ffmpeg loudnorm I=-18 TP=-2 LRA=7; mono MP3 64kbps",
             "provenance": provenance,
             "source": "data/starter-islands.json",
             "source_sha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest(),
