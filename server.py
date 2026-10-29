@@ -8,20 +8,28 @@ from werkzeug.exceptions import HTTPException
 from store import Store, LANGUAGES
 from starter_packs import list_starter_packs, find_starter_pack
 from audio_pack import AudioCatalog
-from voice_library import VoicePackLibrary, InvalidVoicePack, MAX_ZIP_BYTES, INSTALLED_ROOT
+from voice_library import VoicePackLibrary, InvalidVoicePack, MAX_ZIP_BYTES, INSTALLED_ROOT, BUNDLED_ROOT
 
 ROOT = Path(__file__).resolve().parent
 WEB = ROOT / 'web'
 
 
-def create_app(database=None, voice_root=None):
+def create_app(database=None, voice_root=None, bundle_root=None):
     app = Flask(__name__, static_folder=None)
     app.config['MAX_CONTENT_LENGTH'] = MAX_ZIP_BYTES + 1024 * 1024
     store = Store(database or os.environ.get('MYWORDS_TEST_DB') or (ROOT / 'local.sqlite3'))
     audio_catalog = AudioCatalog()
-    voice_library = VoicePackLibrary(root=voice_root if voice_root is not None
-                                     else os.environ.get('MYWORDS_TEST_VOICE_ROOT', INSTALLED_ROOT),
-                                     pt_catalog=audio_catalog)
+    # Production automatically discovers versioned bundled ZIPs after a normal
+    # app checkout/update. Isolated tests do not read the user's voice library.
+    isolated = (database is not None or bool(os.environ.get('MYWORDS_TEST_DB'))
+                or voice_root is not None or bool(os.environ.get('MYWORDS_TEST_VOICE_ROOT')))
+    active_bundles = (bundle_root if bundle_root is not None else
+                      os.environ.get('MYWORDS_TEST_BUNDLE_ROOT') or
+                      (None if isolated else BUNDLED_ROOT))
+    voice_library = VoicePackLibrary(
+        root=voice_root if voice_root is not None
+        else os.environ.get('MYWORDS_TEST_VOICE_ROOT', INSTALLED_ROOT),
+        pt_catalog=audio_catalog, bundled_root=active_bundles)
 
     @app.errorhandler(Exception)
     def unhandled(error):
