@@ -136,6 +136,34 @@ class VoicePackZipTests(unittest.TestCase):
         self.assertTrue(installed["changed"])
         self.assertTrue((self.root / "sveta" / "LICENSE-dialogs-openrail.md").is_file())
 
+    def test_versioned_checkout_bundle_is_automatically_available(self):
+        """Real user does not have to upload a voice ZIP to the application."""
+        bundles = Path(self.temp.name) / "bundled"
+        bundles.mkdir()
+        (bundles / "af_heart.zip").write_bytes(synthetic_zip())
+        app_voices = VoicePackLibrary(root=self.root, bundled_root=bundles)
+        self.assertFalse(self.root.exists(), "No manual install or local extraction")
+        selected = next(v for v in app_voices.voices() if v["id"] == "af_heart")
+        self.assertTrue(selected["installed"])
+        phrase = public_rows("en-US")[0]
+        clip = app_voices.for_phrase(phrase["phrase_id"], phrase["source_text"],
+                                    "en-US", "af_heart")
+        self.assertTrue(clip["url"].startswith("/api/voice-media/af_heart/"))
+        self.assertTrue(app_voices.media("af_heart", phrase["phrase_id"]).startswith(b"ID3"))
+        # Voice is still available following a Flask restart.
+        reloaded = VoicePackLibrary(root=self.root, bundled_root=bundles)
+        self.assertTrue(next(v for v in reloaded.voices()
+                             if v["id"] == "af_heart")["installed"])
+
+    def test_corrupt_bundled_archive_fails_closed_without_affecting_progress(self):
+        bundles = Path(self.temp.name) / "bundled"
+        bundles.mkdir()
+        (bundles / "af_heart.zip").write_bytes(synthetic_zip(corrupt=True))
+        app_voices = VoicePackLibrary(root=self.root, bundled_root=bundles)
+        self.assertFalse(next(v for v in app_voices.voices()
+                              if v["id"] == "af_heart")["installed"])
+        self.assertFalse(self.root.exists())
+
     def test_rejected_corruption_never_installs_files(self):
         for args in ({"corrupt": True}, {"change_text": True},
                      {"unsafe_name": True}, {"symlink": True}):
