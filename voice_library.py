@@ -140,6 +140,12 @@ class VoicePackLibrary:
                 if path.is_symlink() or not path.is_file() or path.stat().st_size > MAX_ZIP_BYTES:
                     return None
                 with zipfile.ZipFile(path) as package:
+                    info = package.getinfo(phrase_id + ".mp3")
+                    if (info.file_size != item["bytes"]
+                            or info.file_size > MAX_FILE_BYTES
+                            or info.compress_size > MAX_FILE_BYTES
+                            or info.compress_size == 0):
+                        return None
                     data = package.read(phrase_id + ".mp3")
             except (OSError, ValueError, KeyError, zipfile.BadZipFile, RuntimeError):
                 return None
