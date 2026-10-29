@@ -19,7 +19,11 @@
         <span><strong>MyWords</strong><small>Language learning</small></span>
         <button type="button" class="close-nav" aria-label="Закрыть меню" @click="navOpen=false">×</button>
       </div>
-      <div class="language-chip"><span>🇺🇸</span><span><small>ИЗУЧАЮ</small><strong>English</strong></span><span class="lang-arrow">⌄</span></div>
+      <label class="language-chip" for="sidebar-language"><span>🌍</span><span><small>ИЗУЧАЮ</small><strong>{{ languageName }}</strong></span>
+        <select id="sidebar-language" v-model="selectedLanguage" aria-label="Выбрать язык обучения">
+          <option value="en-US">🇬🇧 English</option><option value="pt-PT">🇵🇹 Português (Portugal)</option>
+        </select>
+      </label>
 
       <div class="nav-label">ГЛАВНОЕ</div>
       <nav class="main-nav">
@@ -55,13 +59,19 @@
           <span>{{ tab==='library' ? 'Мои острова' : tab==='editor' ? 'Редактор' : (selectedIsland?.title || 'Тренировка') }}</span>
         </div>
         <div class="header-actions">
-          <span class="local-badge">● Локально · OPEN-1</span>
+          <select class="target-language-select" v-model="selectedLanguage" aria-label="Язык изучения">
+            <option value="en-US">🇬🇧 English</option><option value="pt-PT">🇵🇹 Português</option>
+          </select>
+          <span class="local-badge">● OPEN-2</span>
           <button v-if="tab==='practice' && selectedIsland" type="button" class="icon-button header-settings"
                   aria-label="Открыть настройки" @click="openSettings('sound')">⚙</button>
         </div>
       </header>
 
       <p v-if="error" class="error-banner" role="alert">{{ error }}</p>
+      <p v-if="tab==='practice' && selectedLanguage==='pt-PT' && !matchingVoices.length"
+         class="voice-warning voice-warning-top">Для португальской озвучки нужен установленный голос pt-PT.
+        Открой настройки звука, чтобы проверить список голосов.</p>
       <div class="main-grid" :class="{'practice-grid':tab==='practice'}">
         <main class="main-surface" :class="{'practice-surface':tab==='practice'}">
 
@@ -69,13 +79,13 @@
             <section class="islands-hero">
               <div><small>МОЯ БИБЛИОТЕКА</small><h1>Языковые острова</h1>
                 <p>Собственные темы и предложения для ежедневной практики.</p>
-                <span class="hero-metrics">{{ islands.length }} островов · Русский → English</span>
+                <span class="hero-metrics">{{ islands.length }} островов · Русский → {{ languageName }}</span>
               </div>
               <div class="hero-symbol" aria-hidden="true">◎</div>
             </section>
             <section class="intro-panel">
               <div><h2>Выбери одну тему. Этого достаточно.</h2>
-                <p>Сначала слушай, потом попробуй вспомнить фразу по-английски.</p>
+                <p>Сначала слушай, потом попробуй вспомнить фразу на {{ languageName }}.</p>
                 <div class="learning-steps"><span>1 Слушай</span><span>2 Повтори</span><span>3 Вспомни</span></div>
               </div>
             </section>
@@ -104,7 +114,7 @@
                   <p>{{ pack.description }}</p>
                   <div class="starter-preview">
                     <span>Пример фразы</span>
-                    <strong>{{ pack.phrases[0].en }}</strong>
+                    <strong>{{ starterText(pack.phrases[0]) }}</strong>
                     <small>{{ pack.phrases[0].ru }}</small>
                   </div>
                   <details class="starter-details">
@@ -112,14 +122,17 @@
                     <ol>
                       <li v-for="(phrase,i) in pack.phrases" :key="i">
                         <span>{{ phrase.ru }}</span>
-                        <strong>{{ phrase.en }}</strong>
+                        <strong>{{ starterText(phrase) }}</strong>
                       </li>
                     </ol>
                   </details>
-                  <button type="button" class="starter-add" :class="{installed:starterInstalled(pack)}"
+                  <button v-if="starterInstalled(pack)" type="button" class="starter-add installed"
+                          @click="openIsland(pack.island_id)">▶ Открыть остров</button>
+                  <button type="button" class="starter-add"
                           :disabled="importingPresetId !== null"
-                          @click="starterInstalled(pack) ? openIsland(pack.island_id) : importPreset(pack.id)">
-                    {{ starterInstalled(pack) ? '▶ Открыть остров' : importingPresetId === pack.id ? 'Добавляю…' : '+ Добавить в мои острова' }}
+                          @click="importPreset(pack.id)">
+                    {{ importingPresetId === pack.id ? 'Добавляю…' :
+                       starterInstalled(pack) ? '+ Добавить недостающие переводы' : '+ Добавить в мои острова' }}
                   </button>
                 </article>
               </div>
@@ -144,23 +157,34 @@
             <template v-if="selectedIsland">
               <form class="editor-form" @submit.prevent="addPhrase">
                 <h2>Добавить предложение</h2>
-                <p>Вводи свои мысли и подходящие английские формулировки вручную.</p>
+                <p>Вводи одну русскую мысль и её перевод на {{ languageName }}. Перевод на другой язык можно добавить позже.</p>
                 <label for="phrase-ru">Русский смысл</label>
                 <textarea id="phrase-ru" v-model="newRu" rows="3" maxlength="2000" required
                           placeholder="Я хочу поймать волну."></textarea>
-                <label for="phrase-en">Английская фраза</label>
-                <textarea id="phrase-en" v-model="newEn" rows="3" maxlength="2000" required
-                          placeholder="I want to catch a wave."></textarea>
+                <label for="phrase-target">Перевод · {{ languageName }}</label>
+                <textarea id="phrase-target" v-model="newTarget" rows="3" maxlength="2000" required
+                          :placeholder="selectedLanguage==='pt-PT' ? 'Quero apanhar uma onda.' : 'I want to catch a wave.'"></textarea>
                 <button type="submit" class="primary">Добавить фразу</button>
               </form>
               <div class="section-title editor-list-title"><h2>Предложения</h2><span>{{ phrases.length }}</span></div>
               <div class="sentence-list">
                 <div class="sentence-item" v-for="(phrase,i) in phrases" :key="phrase.id">
                   <div class="sentence-number">{{ i + 1 }}</div>
-                  <div class="sentence-text"><strong>{{ phrase.en }}</strong><p>{{ phrase.ru }}</p>
-                    <small>{{ !phrase.review_count ? 'Новая' : phrase.mastery===2 ? '✓ Выучил' : 'В повторении' }}</small>
+                  <div class="sentence-text">
+                    <strong>{{ phrase.target || 'Нет перевода на ' + languageName }}</strong><p>{{ phrase.ru }}</p>
+                    <small>{{ !phrase.target ? 'Перевод ещё не добавлен' : !phrase.review_count ? 'Новая' : phrase.mastery===2 ? '✓ Выучил' : 'В повторении' }}</small>
+                    <form v-if="editingPhraseId===phrase.id" class="translation-form" @submit.prevent="saveTranslation">
+                      <label :for="'translation-'+phrase.id">Добавить перевод · {{ languageName }}</label>
+                      <textarea :id="'translation-'+phrase.id" v-model="translationDraft"
+                                rows="2" maxlength="2000" required></textarea>
+                      <div class="translation-actions">
+                        <button type="submit" class="primary">Сохранить</button>
+                        <button type="button" class="outline-button" @click="editingPhraseId=null">Отмена</button>
+                      </div>
+                    </form>
                   </div>
-                  <button type="button" class="outline-button" @click="practicePhrase(phrase.id)">Тренировать</button>
+                  <button v-if="phrase.target" type="button" class="outline-button" @click="practicePhrase(phrase.id)">Тренировать</button>
+                  <button v-else type="button" class="outline-button" @click="startTranslation(phrase.id)">+ Перевод</button>
                 </div>
                 <p v-if="!phrases.length" class="empty-catalog">В этом острове пока нет предложений.</p>
               </div>
@@ -182,12 +206,12 @@
                         @click="openSettings('sound')">⚙</button>
               </div>
               <div class="progress-track" role="progressbar" :aria-valuenow="currentIndex+1"
-                   :aria-valuemin="1" :aria-valuemax="phrases.length" aria-label="Прогресс тренировки">
-                <span :style="{width: ((currentIndex+1)/phrases.length*100)+'%'}"></span>
+                    :aria-valuemin="1" :aria-valuemax="availablePhrases.length" aria-label="Прогресс тренировки">
+                <span :style="{width: ((currentIndex+1)/availablePhrases.length*100)+'%'}"></span>
               </div>
               <div class="session-subhead">
-                <span>{{ mode==='focus' ? 'ТЕНЬ · СЛУШАЙ И ПОВТОРЯЙ' : 'ВСПОМНИТЬ · СКАЖИ ПО-АНГЛИЙСКИ' }}</span>
-                <span>{{ currentIndex+1 }} / {{ phrases.length }}</span>
+                <span>{{ mode==='focus' ? 'ТЕНЬ · СЛУШАЙ И ПОВТОРЯЙ' : 'ВСПОМНИТЬ · СКАЖИ НА ' + languageName }}</span>
+                <span>{{ currentIndex+1 }} / {{ availablePhrases.length }}</span>
               </div>
               <div class="quick-controls">
                 <button type="button" @click="openEditor">☷ &nbsp;Все {{ phrases.length }}</button>
@@ -198,11 +222,11 @@
               <div class="focus-stage" :key="currentPhrase.id + mode">
                 <button type="button" class="speaker-circle" @click="play('phrase')" aria-label="Озвучить текущую фразу">♪</button>
                 <p v-if="mode==='recall'" class="recall-hint">Сначала скажи ответ вслух</p>
-                <p class="focus-phrase">{{ mode==='focus' ? currentPhrase.en : currentPhrase.ru }}</p>
+                <p class="focus-phrase">{{ mode==='focus' ? currentPhrase.target : currentPhrase.ru }}</p>
                 <button type="button" class="reveal-link" :aria-expanded="revealed" @click="revealed=!revealed">
                   {{ revealed ? 'Скрыть перевод' : (mode==='focus' ? 'Нажмите, чтобы показать перевод' : 'Нажмите, чтобы увидеть перевод') }}
                 </button>
-                <p v-if="revealed" class="focus-translation">{{ mode==='focus' ? currentPhrase.ru : currentPhrase.en }}</p>
+                <p v-if="revealed" class="focus-translation">{{ mode==='focus' ? currentPhrase.ru : currentPhrase.target }}</p>
               </div>
               <div class="transport">
                 <button type="button" class="transport-skip" @click="go(-1)" :disabled="currentIndex<=0"
@@ -211,12 +235,12 @@
                         aria-label="Воспроизвести предложение">▶</button>
                 <button type="button" class="transport-main stop" v-else @click="stopAudio"
                         aria-label="Остановить воспроизведение">■</button>
-                <button type="button" class="transport-skip" @click="go(1)" :disabled="currentIndex>=phrases.length-1"
+                <button type="button" class="transport-skip" @click="go(1)" :disabled="currentIndex>=availablePhrases.length-1"
                         aria-label="Следующее предложение">▶▶</button>
               </div>
               <p class="playback-hint" aria-live="polite">{{ audioStatus || 'НАЖМИТЕ ▶ ДЛЯ ВОСПРОИЗВЕДЕНИЯ' }}</p>
               <div class="playlist-actions">
-                <button type="button" @click="play('island')" :disabled="playing || phrases.length<2">▶ &nbsp;Слушать до конца острова</button>
+                <button type="button" @click="play('island')" :disabled="playing || availablePhrases.length<2">▶ &nbsp;Слушать до конца острова</button>
                 <button v-if="playing" type="button" @click="stopAudio">■ Остановить</button>
               </div>
               <div class="evaluation">
@@ -238,8 +262,8 @@
             </template>
             <div v-else class="empty-study">
               <div class="empty-study-icon">▤</div>
-              <h2>Добавь первые фразы</h2>
-              <p>Чтобы начать Focus и Recall, создай хотя бы одно предложение в острове.</p>
+              <h2>{{ phrases.length ? 'Переводов пока нет' : 'Добавь первые фразы' }}</h2>
+              <p>{{ phrases.length ? 'В этом острове пока нет перевода на ' + languageName + '. Добавь перевод к существующей мысли в редакторе.' : 'Чтобы начать Focus и Recall, создай хотя бы одно предложение в острове.' }}</p>
               <button type="button" class="primary" @click="openEditor">Открыть редактор</button>
             </div>
           </template>
@@ -248,15 +272,15 @@
         <aside v-if="tab==='practice'" class="info-rail" aria-label="Информация о тренировке">
           <div class="info-pill">◷ &nbsp;Сегодняшняя практика</div>
           <div class="stats-card">
-            <div><strong>{{ phrases.length }}</strong><small>ФРАЗ</small></div>
+            <div><strong>{{ availablePhrases.length }}</strong><small>ФРАЗ</small></div>
             <div><strong>{{ practiced }}</strong><small>ОЦЕНЕНО</small></div>
             <div><strong>{{ mastered }}</strong><small>ВЫУЧЕНО</small></div>
           </div>
           <div class="help-card">
             <strong>КРАТКО</strong>
             <h3>Меньше действий, больше практики</h3>
-            <p><b>Фокус.</b> Слушай английскую фразу и повторяй вслух.</p>
-            <p><b>Вспомнить.</b> Сначала произнеси ответ по-английски, затем открой перевод.</p>
+            <p><b>Фокус.</b> Слушай фразу на изучаемом языке и повторяй вслух.</p>
+            <p><b>Вспомнить.</b> Сначала произнеси ответ на изучаемом языке, затем открой перевод.</p>
             <p><b>Аудио.</b> Настрой скорость, повторы и паузы с помощью ⚙.</p>
             <p><b>Оценка.</b> Отмечай результат только после самостоятельной попытки.</p>
           </div>
@@ -281,7 +305,7 @@
         <div class="setting-group"><span class="setting-eyebrow">РЕЖИМ ПРАКТИКИ</span>
           <div class="choice-list">
             <button type="button" :class="{selected:mode==='focus'}" @click="mode='focus'">
-              <strong>Фокус · Тень</strong><small>Слушать и повторять английские фразы.</small>
+              <strong>Фокус · Тень</strong><small>Слушать и повторять фразы на выбранном языке.</small>
             </button>
             <button type="button" :class="{selected:mode==='recall'}" @click="mode='recall'">
               <strong>Вспомнить</strong><small>Начать с русского смысла и проверить себя.</small>
@@ -289,11 +313,27 @@
           </div>
         </div>
         <div class="setting-row">
-          <div><strong>Аудио на двух языках</strong><small>Сначала русский, затем английский</small></div>
+          <div><strong>Аудио на двух языках</strong><small>Сначала русский, затем выбранный язык</small></div>
           <input type="checkbox" v-model="settings.order" true-value="ru-en" false-value="en">
         </div>
       </template>
       <template v-else>
+        <div class="setting-group"><span class="setting-eyebrow">ГОЛОС · {{ languageName }}</span>
+          <div class="setting-row voice-setting">
+            <div><strong>Голос изучаемого языка</strong>
+              <small>Для португальского используется только pt-PT, не pt-BR</small></div>
+            <select v-model="voicePreferences[selectedLanguage]" aria-label="Голос изучаемого языка">
+              <option value="">Автоматически (подходящий голос)</option>
+              <option v-for="voice in matchingVoices" :key="voice.voiceURI"
+                      :value="voice.voiceURI">{{ voice.name }} ({{ voice.lang }})</option>
+            </select>
+          </div>
+          <div v-if="selectedLanguage==='pt-PT' && !matchingVoices.length" class="voice-warning" role="status">
+            На устройстве не обнаружен голос европейского португальского (pt-PT).
+            Добавь его в настройках синтеза речи Android. Бразильский голос автоматически не используется.
+          </div>
+          <button type="button" class="outline-button voice-refresh" @click="refreshVoices">↻ Обновить список голосов</button>
+        </div>
         <div class="setting-group"><span class="setting-eyebrow">ВОСПРОИЗВЕДЕНИЕ</span>
           <div class="setting-row">
             <div><strong>Повторений на предложение</strong></div>
@@ -317,7 +357,7 @@
         </div>
         <div class="setting-group"><span class="setting-eyebrow">ДВОЙНОЕ АУДИО</span>
           <div class="setting-row">
-            <div><strong>Сначала русский</strong><small>Произнести русский смысл перед английским</small></div>
+            <div><strong>Сначала русский</strong><small>Произнести русский смысл перед переводом</small></div>
             <input type="checkbox" v-model="settings.order" true-value="ru-en" false-value="en">
           </div>
           <div v-if="settings.order==='ru-en'" class="setting-row">
