@@ -92,8 +92,29 @@ with tempfile.TemporaryDirectory() as temp:
             page.wait_for_function("document.querySelector('.focus-phrase')?.textContent.includes('Estou a aprender')")
             assert 'проверок: 1' in page.locator('.evaluation-heading').inner_text()
             assert not errors, errors
+
+            # A pt-BR voice must NOT silently be used for Portuguese of Portugal.
+            missing = browser.new_page(viewport={'width': 1150, 'height': 780})
+            missing.add_init_script(r"""(() => {
+              const calls = [];
+              Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{
+                getVoices:()=>[{name:'Brazilian voice',lang:'pt-BR',voiceURI:'br'}],
+                cancel(){},speak(u){calls.push(u.text)}
+              }});
+              Object.defineProperty(window,'SpeechSynthesisUtterance',{configurable:true,value:
+                class {constructor(text){this.text=text}}});
+              window.__unexpectedSpeech=calls;
+            })()""")
+            missing.goto(URL)
+            missing.locator('.target-language-select').select_option('pt-PT')
+            missing.locator('.focus-phrase').wait_for()
+            missing.locator('.speaker-circle').click()
+            missing.locator('.error-banner').wait_for()
+            assert 'pt-PT' in missing.locator('.error-banner').inner_text()
+            assert missing.evaluate('window.__unexpectedSpeech.length') == 0
+            missing.close()
             browser.close()
-            print('PASS multilingual UI: same island, pt-PT speech, separate persisted scores')
+            print('PASS multilingual UI: same island, pt-PT speech, independent scores, and pt-BR refusal')
     finally:
         process.terminate()
         try:
