@@ -90,7 +90,52 @@ before they are run. Do not execute model/frontend code with personal secrets.
 Russian checkpoint/voice SHA-256s are stored during generation.
 
 A sample is marked `complete=false` and is **not** an installable package.
-This branch does **not** enable new voices in the Android player yet.
+
+## Install an audio-only ZIP locally (draft PR #8)
+
+Once a real voice has been generated and verified, package exactly the
+`manifest.json` and 144 `<uuid>.mp3` files at the ZIP root (no parent
+directory, models, weights, extra files, or symlinks). For example:
+
+```bash
+cd /tmp/mywords-kokoro-complete/af_heart
+zip -q /tmp/mywords-af_heart.zip manifest.json ./*.mp3
+```
+
+Copy the ZIP to the Android device through any preferred private transfer.
+In MyWords open **Settings → Sound → Аудиопакет ZIP**, choose the local ZIP,
+press **Проверить ZIP** to see the voice/count/size/status, and confirm
+**Установить проверенный пакет**. This needs no Internet once the ZIP
+is present. Valid packages are stored in git-ignored `local_voicepacks/`
+beside the Flask app and survive restarts. The installer:
+- accepts only the approved voice IDs for the 144 existing public starters;
+- checks complete manifest, pinned model/voice, exact source text/UUID,
+  SHA-256 and 144 MP3s **before any permanent write**;
+- rejects traversal, duplicates, symlinks, encrypted files, oversized files,
+  compression bombs and unapproved voice IDs;
+- verifies written files before atomic installation; reimporting the
+  identical package leaves files unchanged; a conflicting version is rejected;
+- never changes `local.sqlite3`, progress, islands or reviews.
+
+The **Kokoro English** selector offers three available voice IDs (two US,
+one UK); only **installed** choices are enabled. The **Russian Kokoro**
+selector is independent and is used for optional double-audio prompts.
+British and American audio use the **same English study progress**. Missing
+local audio is never silently replaced with a system voice after a Kokoro
+choice is made. Legacy English/Russian system speech remains available
+explicitly while installing the prerecorded packages.
+
+The already committed Portuguese pack is still served from
+`web/audio/pt-PT-kokoro-v1/`, not imported a second time. Importing an
+entirely **new collection of words/lessons**, rather than voice recordings
+for the existing 144 starter phrases, is **not implemented by this importer**.
+That remains a separate requirement of #6.
+
+The new HTTP + ZIP tests use synthetic bytes with an MP3 header to exercise
+integrity, not to demonstrate human-audible model output. Real generated
+MP3s require full decoder validation, human listening and Android smoke.
+Flask must remain running in Termux; no work is claimed with the local
+server stopped.
 
 ## Release gates
 
@@ -98,8 +143,8 @@ This branch does **not** enable new voices in the Android player yet.
   physical tablet. Python hashes and signal tests are not a listening test.
 - Verify **OpenRAIL** restrictions for publicly sharing Russian generated
   audio; do not upload personal text/audio to public GitHub.
-- Implement secure ZIP install and per-voice local playback in #6, with no
-  silent system-TTS fallback; leave all learning progress intact.
+- The first voice-only ZIP installer and per-voice playback are implemented;
+  the general lesson content ZIP format/import remains pending in #6.
 - Verify Android airplane-mode, screen lock, and background playback
   separately. No automatic merge or deployment.
 
