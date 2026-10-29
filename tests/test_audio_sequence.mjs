@@ -468,3 +468,40 @@ test('media load exceptions stop explicitly without speech fallback', () => {
   assert.deepEqual(h.errors,['audio-failed']);
   assert.equal(h.speech.length,0);
 });
+
+
+test('pre-recorded English and Russian audio both play with no Web Speech steps', () => {
+  const uuid = '123e4567-e89b-12d3-a456-426614174000';
+  const phrases = [{
+    id: uuid, ru: 'Привет', target: 'Hello',
+    audio: { url: '/api/voice-media/af_heart/' + uuid + '.mp3' },
+    ru_audio: { url: '/api/voice-media/sveta/' + uuid + '.mp3' },
+  }];
+  const steps = buildPlaybackSteps(phrases, {
+    language: 'en-US', order: 'ru-en', repeats: 1, pauseMs: 0,
+    audioRequired: true, ruAudioRequired: true,
+  });
+  assert.deepEqual(steps.map(s => s.kind), ['audio', 'pause', 'audio']);
+  assert.deepEqual(steps.filter(s => s.kind === 'audio').map(s => s.lang), ['ru-RU', 'en-US']);
+  assert.ok(steps.filter(s => s.kind === 'audio').every(s => isLocalAudioUrl(s.url)));
+});
+
+test('selected but missing Kokoro voice fails closed without browser speech fallback', () => {
+  const uuid = '123e4567-e89b-12d3-a456-426614174000';
+  const phrases = [{ id: uuid, ru: 'Привет', target: 'Hello' }];
+  const steps = buildPlaybackSteps(phrases, { audioRequired: true, language: 'en-US' });
+  assert.equal(steps[0].kind, 'audio');
+  assert.equal(steps[0].url, undefined);
+  const h = harness();
+  assert.equal(h.player.start(steps), false);
+  assert.deepEqual(h.errors, ['audio-missing']);
+  assert.equal(h.speech.length, 0);
+});
+
+test('voice routes stay strictly same-origin and reject path traversal', () => {
+  const id = '123e4567-e89b-12d3-a456-426614174000';
+  assert.equal(isLocalAudioUrl('/api/voice-media/bf_emma/' + id + '.mp3'), true);
+  assert.equal(isLocalAudioUrl('https://server.example/audio.mp3'), false);
+  assert.equal(isLocalAudioUrl('/api/voice-media/../../etc/passwd'), false);
+  assert.equal(isLocalAudioUrl('/api/voice-media/sveta/../' + id + '.mp3'), false);
+});
