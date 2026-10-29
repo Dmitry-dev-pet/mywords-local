@@ -270,7 +270,10 @@ def generate(name: str, *, output: Path = OUTPUT, sample: int = 0) -> dict:
 
     speak, model_hashes = synth_for_voice(voice, voice_data["models"][voice["model"]])
     with tempfile.TemporaryDirectory(prefix="mywords-voice-", dir=destination.parent) as tmp:
-        stage = Path(tmp)
+        # Move a child directory, not TemporaryDirectory's own root: its
+        # cleanup must still work after an atomic rename.
+        stage = Path(tmp) / "ready"
+        stage.mkdir()
         with tempfile.TemporaryDirectory(prefix="kokoro-wav-") as wav_tmp:
             wav = Path(wav_tmp) / "source.wav"
             entries = []
