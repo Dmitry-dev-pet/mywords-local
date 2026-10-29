@@ -1,6 +1,6 @@
 # MyWords Local
 
-Local-first personal English and European Portuguese practice with **Vue 3 + Flask + SQLite**. Features: language islands, Focus (listening and repeating), Recall (remembering a phrase in the selected language from Russian), local Kokoro pt-PT recordings, English browser speech, configurable repeats/pauses, and manual ratings stored on device.
+Local-first personal English and European Portuguese practice with **Vue 3 + Flask + SQLite**. Features: language islands, Focus (listening and repeating), Recall (remembering a phrase in the selected language from Russian), pre-recorded Kokoro English (US/UK), Russian prompts and Portuguese (Portugal), configurable repeats/pauses, and manual ratings stored on device.
 
 **This is a fresh public repository containing only the standalone application.** No personal database, earlier cloud app, private project history, research screenshots, login credentials, LLM service, or outbound user telemetry is included.
 
@@ -15,7 +15,22 @@ bash setup.sh
 
 Open http://127.0.0.1:8791/ on the same device. Use Ctrl+C to stop the server. **Do not expose the Flask port to the internet or a shared LAN**: it deliberately has no authentication.
 
-Words, language-specific scores, and review events remain in git-ignored `local.sqlite3`. The browser stores playback options in `localStorage`. English and optional Russian pre-reading use installed system voices. The 144 public Portuguese recordings require **no Android pt-PT voice, Python TTS, model weights or internet** after the checkout and normal `setup.sh` dependencies have been downloaded. Keep Flask running on the same device; screen-off/background audio still needs the Android check below.
+Words, language-specific scores, and review events remain in git-ignored `local.sqlite3`. The browser stores playback options in `localStorage`. **All seven supported Kokoro voices are bundled in the Git checkout:** 3 English (two US, one UK), 3 Russian and 1 European Portuguese. The six new voice packs contain 864 MP3s in about 14 MB; the existing 144 Portuguese MP3s remain in the original app package. No manual archive import, system voice, model weights or Internet is needed for playback after the normal Git checkout and dependencies have been downloaded. The Russian OpenRAIL license is available inside the app and requires acceptance before selecting these voices. Keep Flask running on the same device; screen-off/background audio still needs the Android check below.
+
+## Voice delivery: no manual ZIP imports
+
+The ordinary Git clone/update brings versioned `data/kokoro-voicepacks-v1/*.zip`
+alongside application code. At Flask startup MyWords verifies each bundled
+archive (exact 144 phrase IDs, texts, SHA-256s and license files) and plays
+individual MP3s directly from the ZIP. **There is no separate download,
+unzip, or import procedure** for the built-in voices. The manual ZIP importer
+remains collapsed under advanced settings for optional recovery or future
+custom packs. English US/UK voices share one English review history; Russian
+is only a prerecorded source-language prompt. No LLM runs in the application.
+
+Note: these new assets are in [Draft PR #8](https://github.com/Dmitry-dev-pet/mywords-local/pull/8)
+until the owner explicitly approves merging; the current `main` build remains
+unchanged until then.
 
 ## Develop with the GitHub CI gate
 
