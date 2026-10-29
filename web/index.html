@@ -370,7 +370,13 @@
           </div>
         </div>
         <div class="setting-group">
-          <span class="setting-eyebrow">АУДИОПАКЕТ ZIP · ЛОКАЛЬНАЯ УСТАНОВКА</span>
+          <span class="setting-eyebrow">ГОТОВЫЕ ГОЛОСА KOKORO</span>
+          <p role="status">{{ voiceCatalog.filter(v => v.installed).length }} / {{ voiceCatalog.length }}
+            голосов доступны с этой версией MyWords. Ничего отдельно скачивать не нужно:
+            аудио уже находится в приложении и работает без интернета.</p>
+          <details>
+            <summary>Дополнительно: ручной импорт других проверенных ZIP</summary>
+
           <p>Файлы должны содержать 144 подготовленные записи для одного голоса.
             Предварительная проверка не изменяет твою базу занятий.</p>
           <input type="file" accept=".zip,application/zip" aria-label="Выбрать ZIP с голосом"
@@ -394,6 +400,7 @@
                   :disabled="voicePackBusy || (voicePackPreview.requires_openrail && !openrailAccepted)"
                   @click="voicePackAction('install')">Установить проверенный пакет</button>
           <p v-if="voicePackMessage" role="status">{{ voicePackMessage }}</p>
+          </details>
         </div>
         <div class="setting-group"><span class="setting-eyebrow">ВОСПРОИЗВЕДЕНИЕ</span>
           <div class="setting-row">
