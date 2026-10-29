@@ -49,6 +49,23 @@ def synthetic_zip(voice_id="af_heart", *, corrupt=False, change_text=False,
         "entries": entries,
         "summary": {"files": len(entries), "bytes": sum(e["bytes"] for e in entries)},
     }
+    if voice["model"] == "russian":
+        # Synthetic license text for tests ONLY; actual packs bundle the
+        # upstream Langswap LICENSE.md unmodified and pin its SHA-256.
+        license_text = (
+            "# Dialogs OpenRAIL License\n"
+            "## Use Restrictions\nThis synthetic license fixture is not legal text.\n"
+            "## Distribution\nNo actual redistribution terms are defined by this test.\n"
+        ) * 13
+        raw_license = license_text.encode("utf-8")
+        manifest["redistribution"] = {
+            "requires_acceptance": True,
+            "license_file": "LICENSE-dialogs-openrail.md",
+            "license_sha256": hashlib.sha256(raw_license).hexdigest(),
+            "dataset_repository": "langswap/dialogs-ru-emotional-conversations",
+            "dataset_revision": "x" * 40,
+        }
+        content["LICENSE-dialogs-openrail.md"] = raw_license
     output = BytesIO()
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as z:
         z.writestr("manifest.json", json.dumps(manifest).encode("utf-8"))
@@ -105,6 +122,19 @@ class VoicePackZipTests(unittest.TestCase):
             phrase["phrase_id"], phrase["source_text"], "en-US", "bf_emma"))
         self.assertIsNone(self.manager.for_phrase(
             phrase["phrase_id"], phrase["source_text"], "pt-PT", "bf_emma"))
+
+    def test_russian_archive_bundles_license_and_requires_user_acceptance(self):
+        archive = synthetic_zip("sveta")
+        preview = self.manager.preview(archive)
+        self.assertTrue(preview["requires_openrail"])
+        self.assertIn("Use Restrictions", preview["license_text"])
+        self.assertFalse(self.root.exists())
+        with self.assertRaisesRegex(InvalidVoicePack, "OpenRAIL"):
+            self.manager.install(archive)
+        self.assertFalse(self.root.exists())
+        installed = self.manager.install(archive, accepted_openrail=True)
+        self.assertTrue(installed["changed"])
+        self.assertTrue((self.root / "sveta" / "LICENSE-dialogs-openrail.md").is_file())
 
     def test_rejected_corruption_never_installs_files(self):
         for args in ({"corrupt": True}, {"change_text": True},
