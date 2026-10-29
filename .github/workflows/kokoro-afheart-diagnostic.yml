@@ -1,4 +1,4 @@
-name: Kokoro af_heart crest-factor diagnostic
+name: Kokoro af_heart crest-factor diagnostic retry
 
 on:
   pull_request:

@@ -5,6 +5,8 @@ Never imports local study data; models download only on an explicitly run job.
 from pathlib import Path
 import argparse
 import json
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import numpy as np
 import soundfile as sf
 from tools.build_kokoro_voicepacks import catalog, voice_by_id, synth_for_voice, public_rows, encode_voice_audio
