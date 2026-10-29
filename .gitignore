@@ -16,3 +16,6 @@ __pycache__/
 .ruff_cache/
 .DS_Store
 *.log
+
+# Private/local installed audio never enters public Git history
+local_voicepacks/
