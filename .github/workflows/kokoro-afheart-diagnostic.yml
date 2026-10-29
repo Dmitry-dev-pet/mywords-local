@@ -2,15 +2,14 @@ name: Kokoro af_heart crest-factor diagnostic retry
 
 on:
   pull_request:
-    paths:
-      - '.github/workflows/kokoro-afheart-diagnostic.yml'
+    types: [edited]
 
 permissions:
   contents: read
 
 jobs:
   diagnose:
-    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/kokoro-all-voices-catalog'
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/kokoro-all-voices-catalog' && contains(github.event.pull_request.title, '[Diagnose Kokoro]')
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:

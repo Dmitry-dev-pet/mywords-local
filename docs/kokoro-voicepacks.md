@@ -26,8 +26,10 @@ The versioned catalog is `data/kokoro-voices.json`. The optional generator
 only. The existing Kokoro Portuguese pack under
 `web/audio/pt-PT-kokoro-v1/` contains 144 ready files and is reused as-is.
 
-Six additional voice packs × 144 phrases = **864 new recordings planned**.
-Those recordings are **not present** in this work branch yet. For each new
+Six additional voice packs × 144 phrases = **864 real recordings generated and verified**.
+These MP3 files are **not committed to the app source tree**; they were exported as
+individual downloadable ZIP artifacts. See [the 2026-10-29 completion and SHA-256 receipt](kokoro-six-voice-receipt-2026-10-29.md).
+Original Portuguese 144 MP3 remain unchanged in the checkout. For each new
 voice, the generator creates:
 
 ```text
@@ -89,7 +91,7 @@ module with Russian stress handling; it and its dependencies require a review
 before they are run. Do not execute model/frontend code with personal secrets.
 Russian checkpoint/voice SHA-256s are stored during generation.
 
-A sample is marked `complete=false` and is **not** an installable package.
+A sample is marked `complete=false` and is **not** an installable package. Full 144-file ZIPs have been generated and verified separately.
 
 ## Install an audio-only ZIP locally (draft PR #8)
 
@@ -139,10 +141,12 @@ server stopped.
 
 ## Release gates
 
-- Validate actual synthesis of 864 files and listen to pronunciation on the
-  physical tablet. Python hashes and signal tests are not a listening test.
-- Verify **OpenRAIL** restrictions for publicly sharing Russian generated
-  audio; do not upload personal text/audio to public GitHub.
+- Actual synthesis and SHA/codec/loudness QA for all 864 recordings **passed**.
+  Human pronunciation and audio-artifact review on the physical tablet remains required,
+  particularly for the ten selectively compressed `af_heart` recordings.
+- All three Russian voice ZIPs bundle the pinned Dialogs **OpenRAIL** terms and
+  the installer requires explicit acceptance. License compliance in actual use
+  remains the recipient's responsibility. Do not upload personal texts/audio.
 - The first voice-only ZIP installer and per-voice playback are implemented;
   the general lesson content ZIP format/import remains pending in #6.
 - Verify Android airplane-mode, screen lock, and background playback

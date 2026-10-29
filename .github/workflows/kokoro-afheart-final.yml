@@ -2,15 +2,14 @@ name: Kokoro af_heart full 144-phrase generation (selective softclip)
 
 on:
   pull_request:
-    paths:
-      - '.github/workflows/kokoro-afheart-final.yml'
+    types: [edited]
 
 permissions:
   contents: read
 
 jobs:
   af-heart-full:
-    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/kokoro-all-voices-catalog'
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/kokoro-all-voices-catalog' && contains(github.event.pull_request.title, '[Generate Kokoro af_heart]')
     runs-on: ubuntu-24.04
     timeout-minutes: 55
     steps:
