@@ -81,7 +81,12 @@ class VoicePackLibrary:
             return None
         with self.lock:
             selected = self.installed.get(voice_id)
-            if not selected or selected["locale"] != locale:
+            # en-GB is an *accent variant* of en-US study text/progress.
+            # Never create a second language mastery record for an accent.
+            audio_locale = selected["locale"] if selected else None
+            if (not selected or
+                    not (audio_locale == locale or
+                         (locale == "en-US" and audio_locale == "en-GB"))):
                 return None
             item = selected["entries"].get(phrase_id)
         if not item or hashlib.sha256(text.encode("utf-8")).hexdigest() != item["text_sha256"]:
