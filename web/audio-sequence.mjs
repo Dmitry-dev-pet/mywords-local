@@ -1,6 +1,6 @@
 /**
  * @typedef {{url: string, duration_seconds?: number, sha256?: string, text_sha256?: string, pack_id?: string}} PhraseAudio
- * @typedef {{id: string, ru: string, en?: string, target?: string | null, audio?: PhraseAudio | null}} Phrase
+ * @typedef {{id: string, ru: string, en?: string, target?: string | null, audio?: PhraseAudio | null, ru_audio?: PhraseAudio | null}} Phrase
  * @typedef {{kind: "pause", ms: number} | {kind: "speech" | "audio", url?: string, text: string, lang: string, index: number, phraseId: string, repetition: number, repeats: number}} PlaybackStep
  * @typedef {{speak: (utterance: SpeechUtterance) => void, cancel?: () => void, pause?: () => void, resume?: () => void, speaking?: boolean, pending?: boolean}} SpeechSynthesisPort
  * @typedef {{text: string, lang: string, rate: number, voice?: SpeechSynthesisVoice, onstart?: () => void, onend?: () => void, onerror?: (event: {error: string}) => void}} SpeechUtterance
@@ -13,12 +13,13 @@
  */
 /**
  * @param {Phrase[]} phrases
- * @param {{startIndex?: number, scope?: "phrase" | "island", order?: "en" | "ru-en", repeats?: number, pauseMs?: number, languagePauseMs?: number, language?: "en-US" | "pt-PT"}} [options]
+ * @param {{startIndex?: number, scope?: "phrase" | "island", order?: "en" | "ru-en", repeats?: number, pauseMs?: number, languagePauseMs?: number, language?: "en-US" | "pt-PT", audioRequired?: boolean, ruAudioRequired?: boolean}} [options]
  * @returns {PlaybackStep[]}
  */
 export function buildPlaybackSteps(phrases, {
   startIndex = 0, scope = 'phrase', order = 'en', repeats = 2,
   pauseMs = 1000, languagePauseMs = 500, language = 'en-US',
+  audioRequired = false, ruAudioRequired = false,
 } = {}) {
   if (!Array.isArray(phrases) || !phrases.length) return [];
   if (!Number.isInteger(startIndex) || startIndex < 0 || startIndex >= phrases.length) return [];
@@ -41,10 +42,15 @@ export function buildPlaybackSteps(phrases, {
     if (typeof target !== 'string' || !target.trim()) continue;
     for (let repetition = 1; repetition <= repeats; repetition++) {
       if (order === 'ru-en' && typeof phrase.ru === 'string' && phrase.ru.trim()) {
-        result.push({ kind: 'speech', text: phrase.ru, lang: 'ru-RU', index, phraseId: phrase.id, repetition, repeats });
+        if (phrase.ru_audio?.url || ruAudioRequired) {
+          result.push({ kind: 'audio', url: phrase.ru_audio?.url, text: phrase.ru,
+            lang: 'ru-RU', index, phraseId: phrase.id, repetition, repeats });
+        } else {
+          result.push({ kind: 'speech', text: phrase.ru, lang: 'ru-RU', index, phraseId: phrase.id, repetition, repeats });
+        }
         if (languagePauseMs) result.push({ kind: 'pause', ms: languagePauseMs });
       }
-      if (language === 'pt-PT') {
+      if (language === 'pt-PT' || phrase.audio?.url || audioRequired) {
         result.push({ kind: 'audio', url: phrase.audio?.url, text: target, lang: language, index, phraseId: phrase.id, repetition, repeats });
       } else {
         result.push({ kind: 'speech', text: target, lang: language, index, phraseId: phrase.id, repetition, repeats });
