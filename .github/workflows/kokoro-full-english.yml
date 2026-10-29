@@ -2,15 +2,17 @@ name: Kokoro English 144-phrase audio packs (strict crest-factor QA)
 
 on:
   pull_request:
-    paths:
-      - '.github/workflows/kokoro-full-english.yml'
+    types: [edited]
 
 permissions:
   contents: read
 
 jobs:
   english-full:
-    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/kokoro-all-voices-catalog'
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.head_ref == 'feat/kokoro-all-voices-catalog' &&
+      contains(github.event.pull_request.title, '[Generate Kokoro]')
     runs-on: ubuntu-24.04
     timeout-minutes: 55
     strategy:

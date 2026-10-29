@@ -1,17 +1,17 @@
 name: Kokoro English real-inference pilot
 on:
   pull_request:
-    paths:
-      - '.github/workflows/kokoro-inference-pilot.yml'
-      - 'tools/build_kokoro_voicepacks.py'
-      - 'data/kokoro-voices.json'
+    types: [edited]
 
 permissions:
   contents: read
 
 jobs:
   kokoro-english-pilot:
-    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/kokoro-all-voices-catalog'
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.head_ref == 'feat/kokoro-all-voices-catalog' &&
+      contains(github.event.pull_request.title, '[Generate Kokoro]')
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
