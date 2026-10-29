@@ -356,13 +356,30 @@
               </select>
             </div>
           </template>
+          <div v-if="russianKokoroVoices.some(v => v.installed)" class="setting-group">
+            <strong>Русские голоса: условия OpenRAIL</strong>
+            <p>Три русских голоса включены в приложение. Для их использования один раз ознакомься
+              с условиями лицензии. Скачивать файлы вручную не требуется.</p>
+            <button type="button" class="outline-button" @click="loadRussianLicense">
+              Показать условия OpenRAIL</button>
+            <p v-if="russianLicenseError" role="alert">{{ russianLicenseError }}</p>
+            <details v-if="russianLicenseText">
+              <summary>Полный текст лицензии</summary>
+              <pre class="license-preview" style="max-height:230px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;">{{ russianLicenseText }}</pre>
+            </details>
+            <label>
+              <input type="checkbox" v-model="russianLicenseAccepted"
+                     :disabled="!russianLicenseText && !russianLicenseAccepted">
+              Я прочитал условия OpenRAIL и принимаю ограничения использования
+            </label>
+          </div>
           <div class="setting-row voice-setting">
             <div><strong>Русский голос Kokoro</strong><small>Для режима «Двойное аудио»</small></div>
             <select v-model="selectedRuVoice" aria-label="Голос Kokoro для русского">
-              <option value="">Системный русский голос (старый режим)</option>
+              <option value="">Выбери голос после принятия лицензии</option>
               <option v-for="voice in russianKokoroVoices" :key="voice.id"
-                      :value="voice.id" :disabled="!voice.installed">
-                {{ voice.id }} {{ voice.installed ? '✓' : '(нужен ZIP)' }}
+                      :value="voice.id" :disabled="!voice.installed || !russianLicenseAccepted">
+                {{ voice.id }} {{ voice.installed ? '✓' : '(ещё недоступен)' }}
               </option>
               <option v-if="selectedRuVoice && !russianKokoroVoices.some(v=>v.id===selectedRuVoice && v.installed)"
                       :value="selectedRuVoice" disabled>Выбранный русский голос отсутствует</option>
