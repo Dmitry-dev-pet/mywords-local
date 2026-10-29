@@ -286,7 +286,12 @@ with tempfile.TemporaryDirectory(prefix='mywords-browser-') as temp:
             # A browser with no Web Speech API at all can play the installed pack.
             absent = new_page(browser, blocked, errors, no_speech=True)
             absent.goto(URL)
+            # A new browser context has no selected island; explicitly open
+            # the already imported lesson rather than relying on page state.
+            absent.get_by_role('heading', name='Языковые острова').wait_for()
             absent.locator('.target-language-select').select_option('pt-PT')
+            absent.get_by_role('navigation', name='Мои острова', exact=True).get_by_role(
+                'button', name='Сёрфинг и океан', exact=True).click()
             absent.locator('.focus-phrase').wait_for()
             absent.locator('.speaker-circle').click()
             wait_complete(absent)
