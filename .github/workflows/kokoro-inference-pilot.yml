@@ -1,0 +1,46 @@
+name: Kokoro English real-inference pilot
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/kokoro-inference-pilot.yml'
+      - 'tools/build_kokoro_voicepacks.py'
+      - 'data/kokoro-voices.json'
+
+permissions:
+  contents: read
+
+jobs:
+  kokoro-english-pilot:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/kokoro-all-voices-catalog'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install generation-only dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg espeak-ng
+          python -m pip install --upgrade pip
+          python -m pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install kokoro==0.9.4 "misaki[en]==0.9.4" soundfile numpy huggingface-hub
+      - name: Generate three real English phrases through Kokoro
+        env:
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          HF_HUB_DISABLE_XET: '1'
+          OMP_NUM_THREADS: '2'
+          TOKENIZERS_PARALLELISM: 'false'
+        run: |
+          python tools/build_kokoro_voicepacks.py --generate af_heart --sample 3 --out "$RUNNER_TEMP/kokoro-real-samples"
+          python -c "from pathlib import Path; from tools.build_kokoro_voicepacks import verify; import os, json; p=Path(os.environ['RUNNER_TEMP'])/'kokoro-real-samples'/'af_heart'; print(json.dumps(verify(p,require_complete=False),indent=2))"
+      - name: Archive real-speech sample for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: mywords-kokoro-af-heart-real-pilot
+          path: ${{ runner.temp }}/kokoro-real-samples/af_heart/
+          retention-days: 7
+          if-no-files-found: error
