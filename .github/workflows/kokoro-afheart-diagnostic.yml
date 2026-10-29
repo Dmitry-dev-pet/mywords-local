@@ -1,0 +1,43 @@
+name: Kokoro af_heart crest-factor diagnostic
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/kokoro-afheart-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/kokoro-all-voices-catalog'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install speech generation-only CPU environment
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg espeak-ng
+          python -m pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install kokoro==0.9.4 "misaki[en]==0.9.4" soundfile numpy huggingface-hub
+      - name: Analyze the one genuine failing Kokoro sentence
+        env:
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          HF_HUB_DISABLE_XET: '1'
+          OMP_NUM_THREADS: '2'
+          TOKENIZERS_PARALLELISM: 'false'
+        run: |
+          python tools/diagnose_kokoro.py --voice af_heart --phrase-id f256d7cb-62e3-5c16-bec8-51eaa8698c88 --out "$RUNNER_TEMP/afheart-diag"
+      - name: Preserve raw and diagnostics for offline inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: afheart-crest-diagnostic
+          path: ${{ runner.temp }}/afheart-diag/
+          retention-days: 7
+          if-no-files-found: error
