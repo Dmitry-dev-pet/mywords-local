@@ -80,7 +80,7 @@ with tempfile.TemporaryDirectory() as temp:
             page.locator('.rating-medium').click()
             page.wait_for_function("document.querySelector('.evaluation-heading').textContent.includes('проверок: 1')")
             page.locator('.target-language-select').select_option('en-US')
-            page.wait_for_function("document.querySelector('.focus-phrase')?.textContent.includes('I\u0027m just learning')")
+            page.wait_for_function("document.querySelector('.focus-phrase')?.textContent.includes('just learning to surf')")
             assert 'Ещё не оценено' in page.locator('.evaluation-heading').inner_text()
             page.locator('.rating-good').click()
             page.wait_for_function("document.querySelector('.evaluation-heading').textContent.includes('проверок: 1')")
@@ -98,5 +98,5 @@ with tempfile.TemporaryDirectory() as temp:
         process.terminate()
         try:
             process.wait(timeout=5)
-        except TimeoutError:
+        except Exception:
             process.kill()
