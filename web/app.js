@@ -57,6 +57,14 @@ createApp({
     const preferredVoice = computed(() => matchingVoices.value.find(
       v => v.voiceURI === voicePreferences.value[selectedLanguage.value]) || matchingVoices.value[0] || null);
     const starterPacks = ref([]);
+    const audioPack = ref(null);
+    const audioPackError = ref(false);
+    const audioPackState = computed(() => ({
+      ready: 'Пакет готов',
+      'missing-package': 'Пакет отсутствует',
+      'invalid-package': 'Пакет не прошёл проверку',
+      'incomplete-package': 'Часть файлов отсутствует или повреждена',
+    }[audioPack.value?.status] || 'Статус пакета неизвестен'));
     const importingPresetId = ref(null);
     const starterMessage = ref('');
     const selectedId = ref(null);
@@ -69,6 +77,7 @@ createApp({
     const mode = ref('focus');
     const revealed = ref(false);
     const playing = ref(false);
+    const paused = ref(false);
     const audioStatus = ref('');
     const settings = ref(loadSettings());
     const newIsland = ref('');
@@ -92,9 +101,11 @@ createApp({
     let advancingFromPlayback = false;
 
     const player = new SpeechSequence({
+      audio: typeof window.Audio === 'function' ? new window.Audio() : undefined,
       synthesis: window.speechSynthesis,
       Utterance: window.SpeechSynthesisUtterance,
       onState: active => { playing.value = active; },
+      onPause: value => { paused.value = value; },
       onProgress: step => {
         const phrase = availablePhrases.value[step.index];
         if (!phrase || phrase.id !== step.phraseId) {
@@ -113,14 +124,27 @@ createApp({
       onFinish: () => { audioStatus.value = 'Воспроизведение завершено'; },
       onRecovery: () => { audioStatus.value = 'Браузер пропустил событие завершения · продолжаем'; },
       onError: code => {
-        error.value = code === 'unsupported'
-          ? 'Озвучивание не поддерживается в этом браузере.'
-          : code === 'speech-stalled'
-            ? 'Синтезатор речи не начал чтение. Проверь голосовой движок Android и попробуй снова.'
-            : 'Браузер не смог озвучить фразу. Проверь установленные голоса и звук.';
+        const messages = {
+          unsupported: 'Синтез речи не поддерживается. Для русского предварительного чтения нужен системный русский голос; его можно выключить в настройках.',
+          'audio-missing': 'Для этой фразы или части острова нет готовой записи Kokoro pt-PT. Для личных и изменённых фраз остаётся текстовый Recall: восстановление пакета не создаёт для них записи. Состояние готового пакета — в настройках звука. Текст никуда не отправляется, pt-BR не подставляется.',
+          'audio-unsupported': 'Браузер не поддерживает воспроизведение аудиофайлов.',
+          'audio-failed': 'Не удалось проиграть локальную запись pt-PT. Проверь аудиопакет и звук, затем нажми ▶ ещё раз. Подмена голосом pt-BR отключена.',
+          'speech-stalled': 'Синтезатор речи не начал чтение. Проверь голосовой движок Android и попробуй снова.',
+        };
+        error.value = messages[code] || 'Браузер не смог озвучить фразу. Проверь установленные голоса и звук.';
       },
     });
 
+    async function refreshAudioPack() {
+      try {
+        audioPack.value = await api('/api/audio-pack');
+        audioPackError.value = false;
+      } catch {
+        // Pack diagnostics must not prevent English or text-only practice.
+        audioPack.value = null;
+        audioPackError.value = true;
+      }
+    }
     function refreshVoices() {
       try { voices.value = window.speechSynthesis?.getVoices?.() || []; }
       catch { voices.value = []; }
@@ -128,17 +152,19 @@ createApp({
     function stopAudio() {
       player.stop();
       playing.value = false;
+      paused.value = false;
       audioStatus.value = '';
+    }
+
+    function togglePause() {
+      if (paused.value) player.resume();
+      else if (!player.pause()) error.value = 'Этот голос не поддерживает паузу. Используй «Остановить» и запусти фразу заново.';
     }
 
     // A single card, or the remaining cards of an island. No review writes.
     function play(scope = 'phrase') {
       stopAudio();
       error.value = '';
-      if (selectedLanguage.value === 'pt-PT' && !preferredVoice.value) {
-        error.value = 'Не найден голос Português (Portugal), pt-PT. Установи европейский голос в Android, затем нажми «Обновить голоса» в настройках. Бразильский голос не подставляется.';
-        return;
-      }
       const steps = buildPlaybackSteps(availablePhrases.value, {
         startIndex: currentIndex.value, scope, ...settings.value,
         language: selectedLanguage.value,
@@ -191,6 +217,7 @@ createApp({
       navOpen.value = false;
     }
     function openSettings(section = 'sound') {
+      refreshAudioPack();
       settingsTab.value = section;
       settingsOpen.value = true;
     }
@@ -296,6 +323,7 @@ createApp({
       });
     }
     function go(delta) {
+      stopAudio();
       if (!availablePhrases.value.length) return;
       const index = currentIndex.value < 0 ? 0 : currentIndex.value;
       const next = Math.min(availablePhrases.value.length - 1, Math.max(0, index + delta));
@@ -329,7 +357,9 @@ createApp({
     }, { deep: true });
     onMounted(() => {
       window.addEventListener('keydown', onKeyDown);
+      window.addEventListener('pagehide', stopAudio);
       refreshVoices();
+      refreshAudioPack();
       window.speechSynthesis?.addEventListener?.('voiceschanged', refreshVoices);
       run(async () => {
         await refresh();
@@ -339,15 +369,16 @@ createApp({
     });
     onBeforeUnmount(() => {
       window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('pagehide', stopAudio);
       window.speechSynthesis?.removeEventListener?.('voiceschanged', refreshVoices);
       stopAudio();
     });
 
     return { ready, error, islands, selectedLanguage, languageName, matchingVoices,
-      voicePreferences, refreshVoices, starterPacks, importingPresetId, starterMessage,
+      voicePreferences, refreshVoices, starterPacks, audioPack, audioPackError, audioPackState, importingPresetId, starterMessage,
       starterText, starterInstalled, importPreset, selectedId, selectedIsland, phrases, availablePhrases,
       currentPhrase, currentIndex, practiced, mastered, scoreLabel,
-      tab, mode, revealed, playing, audioStatus, settings, navOpen, settingsOpen, settingsTab,
+      tab, mode, revealed, playing, paused, togglePause, audioStatus, settings, navOpen, settingsOpen, settingsTab,
       newIsland, newRu, newTarget, editingPhraseId, translationDraft, startTranslation,
       saveTranslation, selectIsland, createIsland, addPhrase,
       mark, go, practicePhrase, play, stopAudio, openCatalog, openEditor, showPractice,

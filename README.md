@@ -1,6 +1,6 @@
 # MyWords Local
 
-Local-first personal English and European Portuguese practice with **Vue 3 + Flask + SQLite**. Features: language islands, Focus (listening and repeating), Recall (remembering a phrase in the selected language from Russian), customizable browser speech and pauses, and manual ratings stored on device.
+Local-first personal English and European Portuguese practice with **Vue 3 + Flask + SQLite**. Features: language islands, Focus (listening and repeating), Recall (remembering a phrase in the selected language from Russian), local Kokoro pt-PT recordings, English browser speech, configurable repeats/pauses, and manual ratings stored on device.
 
 **This is a fresh public repository containing only the standalone application.** No personal database, earlier cloud app, private project history, research screenshots, login credentials, LLM service, or outbound user telemetry is included.
 
@@ -15,7 +15,7 @@ bash setup.sh
 
 Open http://127.0.0.1:8791/ on the same device. Use Ctrl+C to stop the server. **Do not expose the Flask port to the internet or a shared LAN**: it deliberately has no authentication.
 
-Words, language-specific scores, and review events remain in git-ignored `local.sqlite3`. The browser stores playback options in `localStorage`. Real Android speech depends on installed system voices and the screen remaining active.
+Words, language-specific scores, and review events remain in git-ignored `local.sqlite3`. The browser stores playback options in `localStorage`. English and optional Russian pre-reading use installed system voices. The 144 public Portuguese recordings require **no Android pt-PT voice, Python TTS, model weights or internet** after the checkout and normal `setup.sh` dependencies have been downloaded. Keep Flask running on the same device; screen-off/background audio still needs the Android check below.
 
 ## Develop with the GitHub CI gate
 
@@ -65,12 +65,26 @@ columns; the new `phrase_translations` table contains language-specific
 text/scores, and `review_events.language` tracks reviews separately.
 **Do not delete the private backup until you've checked your data.**
 
-European Portuguese TTS uses an explicitly detected `pt-PT` browser voice;
-it does not fall back silently to a Brazilian `pt-BR` voice. If no pt-PT
-voice is available on Android, the text/Recall modes still work, but audio
-is disabled until the voice is installed in Android's TTS settings. Open
-**Настройки → Звук → Обновить список голосов** after installing one.
-This is a device capability, not a server dependency.
+European Portuguese uses **Kokoro recordings, not Web Speech**. The versioned
+package `web/audio/pt-PT-kokoro-v1/` ships with the checkout, so no remote cache,
+temporary Actions artifact, separate download service or model runtime is needed
+on the tablet. Flask serves these local files even in airplane mode. It checks
+the manifest, public phrase IDs, source-text hashes and each audio SHA-256 at
+startup. `/api/audio-pack` reports the verified installed count.
+
+Recordings apply only to the exact shared starter phrase ID **and** matching
+Portuguese text. Personal phrases or changed translations without a recording
+show a clear missing-audio state; text Recall still works. Their text is never
+sent to a TTS service. There is **no pt-BR or system pt-PT fallback**. If a package
+file is missing/corrupt, restore the versioned package from the checkout and
+restart Flask. No SQLite reset or reimport is necessary.
+
+Focus and Recall share one player: one phrase or the rest of an island,
+Pause/Resume, Stop, Next, 1–5 repeats, 0.5–1.5× playback speed (pitch preserved
+where supported), and existing pause settings. Optional Russian-first reading
+still needs a Russian system voice; turn it off for Portuguese-only listening.
+One master MP3 per phrase is reused at all speeds. Listening never creates a
+review; ratings remain a separate, explicit action.
 
 ## Optional ready-made islands
 
@@ -99,9 +113,21 @@ node --test tests/test_audio_sequence.mjs
 node --check web/app.js
 npm install --ignore-scripts --no-audit --no-fund
 npm run typecheck
+python tools/verify_ptpt_audio.py
+python tests/http_audio_smoke.py
 ```
 
-Public GitHub Actions runs Python API/SQLite/updater fixtures, Node audio tests, strict JSDoc typechecking and real Chromium Playwright tests with **mocked** speech callbacks. Black/Ruff/mypy initially report baseline issues without blocking. Real Android TTS still needs on-device testing.
+The existing CI gate covers Python API/SQLite/updater/audio-integrity fixtures,
+Node player tests, strict JSDoc typechecking and Chromium Playwright tests.
+`tests/playwright_multilingual_smoke.py` uses real HTTP MP3 decoding/playback
+with internet requests blocked; only English/Russian speech callbacks are mocked.
+`tests/playwright_audio_smoke.py` separately exercises the speech watchdog with
+mocked callbacks. Black/Ruff/mypy report baseline issues without blocking.
+Automated checks do not certify a physical Android speaker or pronunciation.
+
+See [audio package provenance and regeneration](docs/audio-pack-provenance.md)
+and the [Android smoke checklist](docs/android-audio-smoke.md). Generation tools
+are maintainer-only; **do not install their dependencies on the tablet**.
 
 Browser audio never records reviews. Only rating buttons add a review event. The Flask app neither sends lesson text nor posts diagnostics to GitHub.
 

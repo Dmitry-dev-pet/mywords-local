@@ -1,0 +1,54 @@
+{
+  "checked_at_utc": "2026-10-29T10:09:15Z",
+  "source": "data/starter-islands.json",
+  "source_sha256": "f993a6f54e8556c1084f50d00b73760bed546863092ed6aa349b2367c41fd721",
+  "automated_audio_qa": {
+    "status": "PASS",
+    "mode": "decoded-all-files",
+    "manifest_sha256": "355172ab2c0b80ad1e254673716967d932136c86cb71f56d3473aa9c7115b842",
+    "files": 144,
+    "bytes": 2764800,
+    "duration_seconds": 341.352,
+    "duration_range_seconds": [
+      1.224,
+      4.32
+    ],
+    "integrated_lufs_range": [
+      -19.99,
+      -18.4
+    ],
+    "maximum_true_peak_dbtp": -2.18
+  },
+  "sampled_reproducibility": {
+    "status": "PASS",
+    "scope": "first-three-phrases-separate-offline-process",
+    "identical_bytes": 3,
+    "strict_loaded_tensors": 688,
+    "identity_affine_tensors": 140,
+    "samples": [
+      {
+        "phrase_id": "bf0088a3-3915-5269-bf41-33b6b4898e93",
+        "sha256": "513568ed1ed6e0c980ce217ebae3d3ee7363af93be5303436d99f0256adaebb9"
+      },
+      {
+        "phrase_id": "42a714b9-c1c6-5388-a2d1-125b31a8779e",
+        "sha256": "d0690c7e3240da02b8e06f25206c742938128377bae5b757449ec14480702a47"
+      },
+      {
+        "phrase_id": "79e295f0-c0a2-5bf1-b928-687e01327c36",
+        "sha256": "2d7967ebb658075403fc39ebeac0e5655429c04f6b17b8f68d3b8565d327b6ff"
+      }
+    ]
+  },
+  "encoding_details": {
+    "compressed_clips": 45,
+    "maximum_compression_attempts_used": 1,
+    "maximum_leading_silence_seconds": 0.03775,
+    "maximum_trailing_silence_seconds": 0.021208
+  },
+  "not_verified": [
+    "Full144 native-speaker pronunciation review",
+    "Real Android tablet playback/offline/pause-resume/speed tests",
+    "Independent training-data and speaker-consent audit"
+  ]
+}
