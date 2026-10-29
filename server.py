@@ -7,6 +7,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from werkzeug.exceptions import HTTPException
 from store import Store, LANGUAGES
 from starter_packs import list_starter_packs, find_starter_pack
+from audio_pack import AudioCatalog
 
 ROOT = Path(__file__).resolve().parent
 WEB = ROOT / 'web'
@@ -15,6 +16,7 @@ WEB = ROOT / 'web'
 def create_app(database=None):
     app = Flask(__name__, static_folder=None)
     store = Store(database or os.environ.get('MYWORDS_TEST_DB') or (ROOT / 'local.sqlite3'))
+    audio_catalog = AudioCatalog()
 
     @app.errorhandler(Exception)
     def unhandled(error):
@@ -43,6 +45,11 @@ def create_app(database=None):
         # Public catalog only; no SQLite writes or external requests.
         return jsonify(list_starter_packs())
 
+    @app.get('/api/audio-pack')
+    def audio_pack_status():
+        # Read-only public package health; never exposes local study text.
+        return jsonify(audio_catalog.status())
+
     @app.post('/api/starter-islands/<pack_id>/import')
     def import_starter_island(pack_id):
         pack = find_starter_pack(pack_id)
@@ -69,7 +76,10 @@ def create_app(database=None):
     def phrases(island_id):
         language = request.args.get('language', 'en-US')
         try:
-            return jsonify(store.phrases(island_id, language))
+            rows = store.phrases(island_id, language)
+            for row in rows:
+                row['audio'] = audio_catalog.for_phrase(row['id'], row.get('target'), language)
+            return jsonify(rows)
         except ValueError as error:
             return jsonify(error=str(error)), 400
 

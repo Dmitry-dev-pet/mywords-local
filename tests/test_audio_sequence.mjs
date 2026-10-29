@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildPlaybackSteps, SpeechSequence } from '../web/audio-sequence.mjs';
+import { buildPlaybackSteps, SpeechSequence, isLocalAudioUrl } from '../web/audio-sequence.mjs';
 
 const PHRASES = [
   { id: 'a', ru: 'Привет', en: 'Hello' },
@@ -8,7 +8,7 @@ const PHRASES = [
   { id: 'c', ru: 'До встречи', en: 'See you' },
 ];
 
-function harness() {
+function harness({ audio, noSpeech = false } = {}) {
   const speech = [];
   const timers = new Map();
   let timerId = 0;
@@ -16,7 +16,7 @@ function harness() {
   const synth = { speak(u) { speech.push(u); }, cancel() {} };
   class Utterance { constructor(text) { this.text = text; } }
   const player = new SpeechSequence({
-    synthesis: synth, Utterance,
+    audio, synthesis: noSpeech ? undefined : synth, Utterance: noSpeech ? undefined : Utterance,
     schedule(fn, ms) { const id = ++timerId; timers.set(id, { fn, ms }); return id; },
     unschedule(id) { timers.delete(id); },
     onState: value => states.push(value),
@@ -186,27 +186,285 @@ test('watchdog resets stuck speaking flag after generous timeout', () => {
   } finally {Date.now=previous;}
 });
 
-test('Portuguese uses pt-PT speech and does not borrow English text', () => {
+test('Portuguese uses pt-PT recordings and does not borrow English text', () => {
   const source = [
     {id:'one',ru:'Я хочу поймать волну.',en:'I want to catch a wave.',target:'Quero apanhar uma onda.'},
     {id:'two',ru:'Привет',en:'Hello',target:null}
   ];
   const steps=buildPlaybackSteps(source,{language:'pt-PT',scope:'island',repeats:2});
-  assert.deepEqual(steps.filter(s=>s.kind==='speech').map(s=>[s.lang,s.text]),[
+  assert.deepEqual(steps.filter(s=>s.kind==='audio').map(s=>[s.lang,s.text]),[
     ['pt-PT','Quero apanhar uma onda.'],['pt-PT','Quero apanhar uma onda.']
   ]);
   assert.deepEqual(buildPlaybackSteps([{id:'x',ru:'Привет',en:'Hello'}],{language:'pt-PT'}),[]);
   assert.throws(()=>buildPlaybackSteps(source,{language:'pt-BR'}), RangeError);
 });
-test('the selected European Portuguese voice applies only to matching speech', () => {
-  const voice = {name:'Portuguese Portugal',lang:'pt-PT',voiceURI:'pt-PT-local'};
-  const h=harness();
-  const steps=buildPlaybackSteps([{id:'p',ru:'Привет',target:'Olá'}],
-    {language:'pt-PT',order:'ru-en',repeats:1,languagePauseMs:0});
-  h.player.start(steps, 1, voice);
-  assert.equal(h.speech[0].lang, 'ru-RU');
-  assert.equal(h.speech[0].voice, undefined);
+function fakeAudio() {
+  return { src: '', currentTime: 0, playbackRate: 1, preservesPitch: false,
+    preload: '', ended: false, error: null, onended: null, onerror: null, calls: [], pauses: 0,
+    load() { this.currentTime = 0; this.ended = false; this.error = null; },
+    play() { this.calls.push(this.src); return Promise.resolve(); },
+    pause() { this.pauses++; },
+  };
+}
+function endAudio(audio) { audio.ended = true; audio.onended?.(); }
+function errorAudio(audio) { audio.error = {code: 4}; audio.onerror?.(); }
+const PT = [
+  {id:'a',ru:'Привет',target:'Olá',audio:{url:'/web/audio/pt-PT-kokoro-v1/a.mp3'}},
+  {id:'b',ru:'До встречи',target:'Até logo',audio:{url:'/web/audio/pt-PT-kokoro-v1/b.mp3'}},
+];
+
+test('a Portuguese recording works with no Web Speech implementation', () => {
+  const audio = fakeAudio(), h = harness({audio, noSpeech:true});
+  assert.equal(h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',repeats:1}),0.65),true);
+  assert.equal(audio.src,PT[0].audio.url);
+  assert.equal(audio.playbackRate,0.65);
+  assert.equal(audio.preservesPitch,true);
+  endAudio(audio);
+  assert.equal(h.completed.length,1);
+  assert.equal(h.errors.length,0);
+  assert.equal(h.speech.length,0);
+});
+
+test('Russian speech precedes pt-PT media; no Portuguese browser voice is called', () => {
+  const audio=fakeAudio(), h=harness({audio});
+  const steps=buildPlaybackSteps(PT,{language:'pt-PT',order:'ru-en',repeats:1,languagePauseMs:0});
+  h.player.start(steps,1,{lang:'pt-BR',voiceURI:'br'});
+  assert.equal(h.speech[0].lang,'ru-RU');
+  assert.equal(h.speech[0].voice,undefined);
+  assert.equal(audio.calls.length,0);
   h.speech[0].onend();
-  assert.equal(h.speech[1].lang, 'pt-PT');
-  assert.equal(h.speech[1].voice, voice);
+  assert.equal(audio.calls.length,1);
+  assert.equal(h.speech.length,1);
+  endAudio(audio);
+  assert.equal(h.completed.length,1);
+});
+
+test('pt-PT repetitions and island progression retain inter-repeat pauses', () => {
+  const audio=fakeAudio(), h=harness({audio});
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',scope:'island',repeats:2,pauseMs:500}));
+  for (let i=0;i<3;i++) { endAudio(audio); assert.equal(h.tick(),500); }
+  endAudio(audio);
+  assert.deepEqual(audio.calls,[PT[0].audio.url,PT[0].audio.url,PT[1].audio.url,PT[1].audio.url]);
+  assert.deepEqual(h.progress.map(s=>[s.index,s.repetition]),[[0,1],[0,2],[1,1],[1,2]]);
+  assert.equal(h.completed.length,1);
+  assert.equal(h.timers.size,0);
+});
+
+test('missing private audio fails before any Russian or Portuguese playback', () => {
+  const h=harness({audio:fakeAudio()});
+  const privatePhrase={id:'private',ru:'Личная фраза',target:'Privado'};
+  assert.equal(h.player.start(buildPlaybackSteps([...PT,privatePhrase],{language:'pt-PT',scope:'island',order:'ru-en'})),false);
+  assert.deepEqual(h.errors,['audio-missing']);
+  assert.equal(h.speech.length,0);
+  assert.equal(h.progress.length,0);
+});
+
+test('invalid/non-local audio URLs cannot call remote endpoints', () => {
+  for (const url of ['https://example.com/a.mp3','//example.com/a.mp3','/web/audio/../secret/a.mp3','/api/tts?text=private','data:audio/mp3,abc']) {
+    assert.equal(isLocalAudioUrl(url),false);
+    const h=harness({audio:fakeAudio()});
+    h.player.start(buildPlaybackSteps([{...PT[0],audio:{url}}],{language:'pt-PT'}));
+    assert.deepEqual(h.errors,['audio-missing']);
+  }
+});
+
+test('even legacy pt-PT speech steps cannot trigger browser fallback', () => {
+  const h=harness({audio:fakeAudio()});
+  const steps=buildPlaybackSteps(PT,{language:'pt-PT',repeats:1}).map(s=>({...s,kind:'speech'}));
+  h.player.start(steps,1,{lang:'pt-BR',voiceURI:'br'});
+  assert.equal(h.speech.length,0);
+  assert.deepEqual(h.errors,['audio-missing']);
+});
+
+test('stop cancels MP3, watchdog, and stale media callbacks', () => {
+  const audio=fakeAudio(), h=harness({audio});
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',scope:'island',repeats:1}));
+  const ended=audio.onended, failed=audio.onerror;
+  audio.currentTime=0.7;
+  h.player.stop();
+  ended(); failed();
+  assert.equal(audio.currentTime,0);
+  assert.equal(audio.onended,null);
+  assert.equal(h.timers.size,0);
+  assert.equal(audio.calls.length,1);
+  assert.equal(h.errors.length,0);
+  assert.equal(h.completed.length,0);
+});
+
+test('next/restart invalidates previous media completions', () => {
+  const audio=fakeAudio(), h=harness({audio});
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',repeats:2}));
+  const ended=audio.onended;
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',startIndex:1,repeats:1}));
+  ended();
+  assert.equal(audio.calls.length,2);
+  assert.equal(audio.src,PT[1].audio.url);
+  assert.equal(h.completed.length,0);
+  endAudio(audio);
+  assert.equal(h.completed.length,1);
+});
+
+test('failed MP3 stops the playlist instead of skipping or using TTS', () => {
+  const audio=fakeAudio(), h=harness({audio});
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',scope:'island',repeats:1}));
+  errorAudio(audio);
+  assert.equal(h.player.active,false);
+  assert.deepEqual(h.errors,['audio-failed']);
+  assert.equal(audio.calls.length,1);
+  assert.equal(h.speech.length,0);
+});
+
+test('rejected media play is an explicit error', async () => {
+  const audio=fakeAudio(); audio.play=()=>Promise.reject(new Error('NotAllowedError'));
+  const h=harness({audio});
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',repeats:1}));
+  await Promise.resolve();
+  assert.deepEqual(h.errors,['audio-failed']);
+  assert.equal(h.player.active,false);
+});
+
+test('a stale rejected play promise cannot cancel the next item', async () => {
+  const audio=fakeAudio(); let reject;
+  audio.play=()=>new Promise((resolve,r)=>{reject=r;});
+  const h=harness({audio});
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',scope:'island',repeats:1,pauseMs:0}));
+  const oldReject=reject;
+  endAudio(audio);
+  oldReject(new Error('old play aborted'));
+  await Promise.resolve();
+  assert.equal(h.player.active,true);
+  assert.equal(h.errors.length,0);
+  h.player.stop();
+});
+
+test('pause/resume media retains position and does not create another repetition', () => {
+  const audio=fakeAudio(), h=harness({audio});
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',repeats:1}));
+  audio.currentTime=0.6;
+  assert.equal(h.player.pause(),true);
+  assert.equal(h.player.paused,true);
+  const oldCalls=audio.calls.length;
+  for(let i=0;i<50;i++) h.tick();
+  assert.equal(h.player.active,true);
+  assert.equal(h.errors.length,0);
+  assert.equal(h.player.resume(),true);
+  assert.equal(audio.currentTime,0.6);
+  assert.equal(audio.calls.length,oldCalls+1);
+  assert.equal(h.progress.length,1);
+  endAudio(audio);
+  assert.equal(h.completed.length,1);
+});
+
+test('pause/resume preserves remaining configured delay', () => {
+  const originalNow=Date.now; let now=1000; Date.now=()=>now;
+  try {
+    const audio=fakeAudio(),h=harness({audio});
+    h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',repeats:2,pauseMs:1000}));
+    endAudio(audio); now+=250;
+    h.player.pause();
+    assert.equal(h.timers.size,0);
+    now+=10000; h.player.resume();
+    assert.equal(h.tick(),750);
+    assert.equal(audio.calls.length,2);
+    h.player.stop();
+  } finally { Date.now=originalNow; }
+});
+
+test('media watchdog fails a stalled decoder without silently advancing', () => {
+  const audio=fakeAudio(),h=harness({audio});
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',repeats:2}));
+  while(h.player.active) h.tick();
+  assert.deepEqual(h.errors,['audio-failed']);
+  assert.equal(audio.calls.length,1);
+});
+
+test('Russian pre-reading without SpeechSynthesis fails clearly, audio-only still works', () => {
+  const audio=fakeAudio(),h=harness({audio,noSpeech:true});
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',order:'ru-en',repeats:1}));
+  assert.deepEqual(h.errors,['unsupported']);
+  assert.equal(audio.calls.length,0);
+  assert.equal(h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',repeats:1})),true);
+  h.player.stop();
+});
+
+test('pausing Russian pre-reading suspends watchdog inference and keeps the queue', () => {
+  const originalNow=Date.now; let now=1000; Date.now=()=>now;
+  try {
+    const timers=new Map(),calls=[]; let nextId=0, pauses=0, resumes=0;
+    const audio=fakeAudio();
+    const synth={ speaking:true, pending:false, cancel(){},
+      speak(u){calls.push(u);u.onstart?.();},
+      pause(){pauses++;this.speaking=false;},resume(){resumes++;this.speaking=true;},
+    };
+    class Utterance { constructor(text){this.text=text;} }
+    const player=new SpeechSequence({audio,synthesis:synth,Utterance,
+      schedule(fn){const id=++nextId;timers.set(id,fn);return id;},unschedule(id){timers.delete(id);},
+    });
+    const tick=()=>{const [id,fn]=timers.entries().next().value;timers.delete(id);fn();};
+    player.start(buildPlaybackSteps(PT,{language:'pt-PT',order:'ru-en',repeats:1,languagePauseMs:0}));
+    player.pause();now+=120000;tick();tick();
+    assert.equal(audio.calls.length,0);
+    assert.equal(player.active,true);
+    player.resume();tick();
+    assert.equal(pauses,1);assert.equal(resumes,1);
+    assert.equal(calls.length,1);
+    assert.equal(audio.calls.length,0);
+    calls[0].onend();
+    assert.equal(audio.calls.length,1);
+    player.stop();
+  } finally {Date.now=originalNow;}
+});
+
+
+test('queued DOM ended from previous source cannot finish a newly started item', () => {
+  const audio=fakeAudio(), h=harness({audio});
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',repeats:1}));
+  // Dispatch resolves the current property listener, unlike saved callback refs.
+  const dispatchOldEnded=()=>audio.onended?.();
+  audio.ended=true;
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',startIndex:1,repeats:1}));
+  assert.equal(audio.ended,false); // load() reset current resource state.
+  dispatchOldEnded();
+  assert.equal(h.player.active,true);
+  assert.equal(h.completed.length,0);
+  assert.equal(audio.calls.length,2);
+  endAudio(audio);
+  assert.equal(h.completed.length,1);
+});
+
+test('queued DOM error from previous source is ignored, current media error stops', () => {
+  const audio=fakeAudio(), h=harness({audio});
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',repeats:1}));
+  const dispatchOldError=()=>audio.onerror?.();
+  audio.error={code:4};
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',startIndex:1,repeats:1}));
+  assert.equal(audio.error,null);
+  dispatchOldError();
+  assert.equal(h.player.active,true);
+  assert.equal(h.errors.length,0);
+  errorAudio(audio); // Genuine current-file 404/unsupported-media error.
+  assert.equal(h.player.active,false);
+  assert.deepEqual(h.errors,['audio-failed']);
+});
+
+test('duplicate queued ended within same playlist cannot skip a repetition', () => {
+  const audio=fakeAudio(), h=harness({audio});
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',repeats:2,pauseMs:0}));
+  endAudio(audio);
+  assert.equal(audio.calls.length,2);
+  assert.equal(audio.ended,false);
+  audio.onended?.(); // Old duplicate event reaches the NEW repetition handler.
+  assert.equal(h.completed.length,0);
+  assert.equal(h.player.active,true);
+  endAudio(audio);
+  assert.equal(h.completed.length,1);
+});
+
+test('media load exceptions stop explicitly without speech fallback', () => {
+  const audio=fakeAudio(), h=harness({audio});
+  audio.load=()=>{throw new Error('Cannot load media');};
+  h.player.start(buildPlaybackSteps(PT,{language:'pt-PT',repeats:1}));
+  assert.equal(h.player.active,false);
+  assert.deepEqual(h.errors,['audio-failed']);
+  assert.equal(h.speech.length,0);
 });

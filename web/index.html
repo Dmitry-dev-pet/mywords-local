@@ -69,9 +69,11 @@
       </header>
 
       <p v-if="error" class="error-banner" role="alert">{{ error }}</p>
-      <p v-if="tab==='practice' && selectedLanguage==='pt-PT' && !matchingVoices.length"
-         class="voice-warning voice-warning-top">Для португальской озвучки нужен установленный голос pt-PT.
-        Открой настройки звука, чтобы проверить список голосов.</p>
+      <p v-if="tab==='practice' && selectedLanguage==='pt-PT' && currentPhrase && !currentPhrase.audio"
+         class="voice-warning voice-warning-top" role="status">Для этой фразы нет готовой записи Kokoro pt-PT.
+        Для личных и изменённых фраз доступен текстовый Recall; текст никуда не отправляется.
+        <span v-if="audioPack && !audioPack.ready">Готовый пакет: {{ audioPack.available }}/{{ audioPack.expected }} записей.
+          Восстанови файлы пакета из приложения и перезапусти Flask; это не создаёт записи для личных фраз.</span></p>
       <div class="main-grid" :class="{'practice-grid':tab==='practice'}">
         <main class="main-surface" :class="{'practice-surface':tab==='practice'}">
 
@@ -238,9 +240,10 @@
                 <button type="button" class="transport-skip" @click="go(1)" :disabled="currentIndex>=availablePhrases.length-1"
                         aria-label="Следующее предложение">▶▶</button>
               </div>
-              <p class="playback-hint" aria-live="polite">{{ audioStatus || 'НАЖМИТЕ ▶ ДЛЯ ВОСПРОИЗВЕДЕНИЯ' }}</p>
+              <p class="playback-hint" aria-live="polite">{{ paused ? 'Пауза · нажми «Продолжить»' : (audioStatus || 'НАЖМИТЕ ▶ ДЛЯ ВОСПРОИЗВЕДЕНИЯ') }}</p>
               <div class="playlist-actions">
                 <button type="button" @click="play('island')" :disabled="playing || availablePhrases.length<2">▶ &nbsp;Слушать до конца острова</button>
+                <button v-if="playing" type="button" @click="togglePause" :aria-pressed="paused">{{ paused ? '▶ Продолжить' : 'Ⅱ Пауза' }}</button>
                 <button v-if="playing" type="button" @click="stopAudio">■ Остановить</button>
               </div>
               <div class="evaluation">
@@ -319,20 +322,28 @@
       </template>
       <template v-else>
         <div class="setting-group"><span class="setting-eyebrow">ГОЛОС · {{ languageName }}</span>
-          <div class="setting-row voice-setting">
-            <div><strong>Голос изучаемого языка</strong>
-              <small>Для португальского используется только pt-PT, не pt-BR</small></div>
-            <select v-model="voicePreferences[selectedLanguage]" aria-label="Голос изучаемого языка">
-              <option value="">Автоматически (подходящий голос)</option>
-              <option v-for="voice in matchingVoices" :key="voice.voiceURI"
-                      :value="voice.voiceURI">{{ voice.name }} ({{ voice.lang }})</option>
-            </select>
+          <div v-if="selectedLanguage==='pt-PT'" class="voice-warning" role="status">
+            <strong>Kokoro · Português (Portugal)</strong><br>
+            <span v-if="audioPack">{{ audioPackState }} · {{ audioPack.available }}/{{ audioPack.expected }} записей проверено при запуске Flask.</span>
+            <span v-else>{{ audioPackError ? 'Не удалось проверить состояние аудиопакета.' : 'Проверяем локальный аудиопакет…' }}</span><br>
+            Аудиопакет входит в приложение; отдельная загрузка и установка Python TTS на планшете не нужны.
+            Записи работают без интернета и системного голоса pt-PT.
+            <span v-if="audioPack && !audioPack.ready">Если файлов нет или они повреждены, восстанови пакет из приложения
+              и перезапусти Flask для проверки.</span>
+            Для личных и изменённых фраз без записи остаётся текстовый Recall; восстановление пакета не создаёт для них записи.
+            Голос pt-BR не используется.
           </div>
-          <div v-if="selectedLanguage==='pt-PT' && !matchingVoices.length" class="voice-warning" role="status">
-            На устройстве не обнаружен голос европейского португальского (pt-PT).
-            Добавь его в настройках синтеза речи Android. Бразильский голос автоматически не используется.
-          </div>
-          <button type="button" class="outline-button voice-refresh" @click="refreshVoices">↻ Обновить список голосов</button>
+          <template v-else>
+            <div class="setting-row voice-setting">
+              <div><strong>Голос изучаемого языка</strong><small>Английский — системный синтез речи</small></div>
+              <select v-model="voicePreferences[selectedLanguage]" aria-label="Голос изучаемого языка">
+                <option value="">Автоматически (подходящий голос)</option>
+                <option v-for="voice in matchingVoices" :key="voice.voiceURI"
+                        :value="voice.voiceURI">{{ voice.name }} ({{ voice.lang }})</option>
+              </select>
+            </div>
+            <button type="button" class="outline-button voice-refresh" @click="refreshVoices">↻ Обновить список голосов</button>
+          </template>
         </div>
         <div class="setting-group"><span class="setting-eyebrow">ВОСПРОИЗВЕДЕНИЕ</span>
           <div class="setting-row">

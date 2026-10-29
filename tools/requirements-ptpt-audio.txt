@@ -1,0 +1,10 @@
+# Opt-in generation environment only; NOT installed on Android by setup.sh.
+# Install CPU torch first: pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cpu
+torch==2.7.1+cpu
+tts_eu_pt==0.1.1
+tugaphone==1.4.1a2
+transformers==4.57.6
+huggingface-hub==0.36.2
+numpy==2.4.6
+soundfile==0.14.0
+num2words==0.5.14
