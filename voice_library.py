@@ -125,8 +125,8 @@ class VoicePackLibrary:
         try:
             with zipfile.ZipFile(BytesIO(archive_bytes)) as source:
                 files = source.infolist()
-                if len(files) != EXPECTED_FILES:
-                    raise InvalidVoicePack("Ожидаются manifest.json и ровно 144 MP3")
+                if len(files) not in (EXPECTED_FILES, EXPECTED_FILES + 1):
+                    raise InvalidVoicePack("Ожидаются манифест, 144 MP3 и опциональная лицензия")
                 names = [f.filename for f in files]
                 if len(names) != len(set(names)) or "manifest.json" not in names:
                     raise InvalidVoicePack("Повторяющиеся файлы или отсутствует манифест")
@@ -139,7 +139,9 @@ class VoicePackLibrary:
                             or "\\" in info.filename or info.filename.startswith(".")
                             or info.compress_type not in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)):
                         raise InvalidVoicePack("Небезопасный файл в ZIP")
-                    limit = MAX_MANIFEST_BYTES if info.filename == "manifest.json" else MAX_FILE_BYTES
+                    limit = (MAX_MANIFEST_BYTES if info.filename == "manifest.json" else
+                             100_000 if info.filename == "LICENSE-dialogs-openrail.md"
+                             else MAX_FILE_BYTES)
                     if info.file_size < 1 or info.file_size > limit:
                         raise InvalidVoicePack("Недопустимый размер файла")
                     if info.file_size > max(1, info.compress_size) * MAX_COMPRESSION_RATIO:
@@ -180,6 +182,30 @@ class VoicePackLibrary:
                         or len(set(entry_ids)) != 144 or set(entry_ids) != set(expected)):
                     raise InvalidVoicePack("Идентификаторы фраз не совпадают")
                 expected_names = {"manifest.json"} | {f"{identifier}.mp3" for identifier in entry_ids}
+                is_russian = voice["model"] == "russian"
+                redis = manifest.get("redistribution")
+                license_text = ""
+                if is_russian:
+                    expected_names.add("LICENSE-dialogs-openrail.md")
+                    if (not isinstance(redis, dict)
+                            or redis.get("requires_acceptance") is not True
+                            or redis.get("license_file") != "LICENSE-dialogs-openrail.md"
+                            or redis.get("dataset_repository")
+                               != "langswap/dialogs-ru-emotional-conversations"):
+                        raise InvalidVoicePack("Не указана обязательная лицензия русского голоса")
+                    raw_license = source.read("LICENSE-dialogs-openrail.md") if (
+                        "LICENSE-dialogs-openrail.md" in names) else b""
+                    if (not 1000 < len(raw_license) < 100_000
+                            or hashlib.sha256(raw_license).hexdigest()
+                               != redis.get("license_sha256")):
+                        raise InvalidVoicePack("Отсутствуют подлинные условия OpenRAIL")
+                    try:
+                        license_text = raw_license.decode("utf-8")
+                    except UnicodeDecodeError:
+                        raise InvalidVoicePack("Лицензия должна быть в UTF-8") from None
+                    if not all(w in license_text for w in (
+                            "OpenRAIL", "Use Restrictions", "Distribution")):
+                        raise InvalidVoicePack("Условия OpenRAIL неполные")
                 if set(names) != expected_names:
                     raise InvalidVoicePack("Посторонние или отсутствующие файлы")
                 total_bytes = 0
@@ -211,6 +237,7 @@ class VoicePackLibrary:
                     raise InvalidVoicePack("Неверный итоговый размер пакета")
                 return {"voice_id": name, "locale": voice["locale"],
                         "files": 144, "bytes": total_bytes,
+                        "requires_openrail": is_russian, "license_text": license_text,
                         "manifest_sha256": hashlib.sha256(raw_manifest).hexdigest()}
         except (zipfile.BadZipFile, zipfile.LargeZipFile, EOFError, RuntimeError, OSError):
             raise InvalidVoicePack("Невозможно прочитать ZIP") from None
@@ -225,8 +252,10 @@ class VoicePackLibrary:
         )
         return info
 
-    def install(self, archive_bytes):
+    def install(self, archive_bytes, accepted_openrail=False):
         info = self.preview(archive_bytes)
+        if info["requires_openrail"] and accepted_openrail is not True:
+            raise InvalidVoicePack("Для установки русского голоса нужно принять условия OpenRAIL")
         if info["state"] == "already-installed":
             return {**info, "installed": True, "changed": False}
         if info["state"] == "conflict":
