@@ -66,6 +66,7 @@ createApp({
     const selectedRuVoice = ref(initialKokoro.ru);
     const uploadedVoiceFile = ref(null);
     const voicePackPreview = ref(null);
+    const openrailAccepted = ref(false);
     const voicePackBusy = ref(false);
     const voicePackMessage = ref('');
     const englishKokoroVoices = computed(() => voiceCatalog.value.filter(v => v.locale.startsWith('en-')));
@@ -176,6 +177,7 @@ createApp({
     function selectVoiceFile(event) {
       uploadedVoiceFile.value = event.target.files?.[0] || null;
       voicePackPreview.value = null;
+      openrailAccepted.value = false;
       voicePackMessage.value = '';
     }
     async function voicePackAction(action) {
@@ -186,6 +188,7 @@ createApp({
       try {
         const form = new FormData();
         form.append('pack', uploadedVoiceFile.value, uploadedVoiceFile.value.name);
+        if (action === 'install' && openrailAccepted.value) form.append('accepted_openrail', 'true');
         const response = await fetch('/api/voice-packs/' + action, { method: 'POST', body: form });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Ошибка импорта ZIP');
@@ -447,7 +450,7 @@ createApp({
     return { ready, error, islands, selectedLanguage, languageName, matchingVoices,
       voicePreferences, refreshVoices, starterPacks, audioPack, audioPackError, audioPackState, importingPresetId, starterMessage,
       voiceCatalog, englishKokoroVoices, russianKokoroVoices, selectedAudioVoice, selectedRuVoice,
-      uploadedVoiceFile, voicePackPreview, voicePackBusy, voicePackMessage,
+      uploadedVoiceFile, voicePackPreview, voicePackBusy, voicePackMessage, openrailAccepted,
       selectVoiceFile, voicePackAction,
       starterText, starterInstalled, importPreset, selectedId, selectedIsland, phrases, availablePhrases,
       currentPhrase, currentIndex, practiced, mastered, scoreLabel,
