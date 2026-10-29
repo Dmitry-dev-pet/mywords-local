@@ -5,21 +5,21 @@
   "models": {
     "english": {
       "repository": "hexgrad/Kokoro-82M",
-      "revision": null,
+      "revision": "f3ff3571791e39611d31c381e3a41a3af07b4987",
       "license": "Apache-2.0",
       "backend": "kokoro",
       "checkpoint": "kokoro-v1_0.pth",
       "source": "https://huggingface.co/hexgrad/Kokoro-82M/tree/8542409da2986c0ab5d41b3cf0411f7a58caab38/voices",
-      "pin_status": "pending_verified_commit_sha_before_generation"
+      "pin_basis": "HF commit history / main 2026-10-29; sha256 of model artifacts must be verified at generation"
     },
     "russian": {
       "repository": "zaakirio/kokoro-ru",
-      "revision": null,
+      "revision": "d649c57b239b18c4c384378127cbf01dba039bc1",
       "license": "OpenRAIL",
       "backend": "kokoro-ru",
       "release_status": "review-required",
       "source": "https://huggingface.co/zaakirio/kokoro-ru",
-      "pin_status": "pending_verified_commit_sha_before_generation"
+      "pin_basis": "HF commit history / main 2026-10-29; sha256 of model artifacts must be verified at generation"
     },
     "portuguese": {
       "repository": "logus2k/kokoro_tts_eu_pt",
