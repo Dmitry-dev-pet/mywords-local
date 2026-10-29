@@ -185,3 +185,28 @@ test('watchdog resets stuck speaking flag after generous timeout', () => {
     assert.equal(calls.length,1);
   } finally {Date.now=previous;}
 });
+
+test('Portuguese uses pt-PT speech and does not borrow English text', () => {
+  const source = [
+    {id:'one',ru:'Я хочу поймать волну.',en:'I want to catch a wave.',target:'Quero apanhar uma onda.'},
+    {id:'two',ru:'Привет',en:'Hello',target:null}
+  ];
+  const steps=buildPlaybackSteps(source,{language:'pt-PT',scope:'island',repeats:2});
+  assert.deepEqual(steps.filter(s=>s.kind==='speech').map(s=>[s.lang,s.text]),[
+    ['pt-PT','Quero apanhar uma onda.'],['pt-PT','Quero apanhar uma onda.']
+  ]);
+  assert.deepEqual(buildPlaybackSteps([{id:'x',ru:'Привет',en:'Hello'}],{language:'pt-PT'}),[]);
+  assert.throws(()=>buildPlaybackSteps(source,{language:'pt-BR'}), RangeError);
+});
+test('the selected European Portuguese voice applies only to matching speech', () => {
+  const voice = {name:'Portuguese Portugal',lang:'pt-PT',voiceURI:'pt-PT-local'};
+  const h=harness();
+  const steps=buildPlaybackSteps([{id:'p',ru:'Привет',target:'Olá'}],
+    {language:'pt-PT',order:'ru-en',repeats:1,languagePauseMs:0});
+  h.player.start(steps, 1, voice);
+  assert.equal(h.speech[0].lang, 'ru-RU');
+  assert.equal(h.speech[0].voice, undefined);
+  h.speech[0].onend();
+  assert.equal(h.speech[1].lang, 'pt-PT');
+  assert.equal(h.speech[1].voice, voice);
+});
