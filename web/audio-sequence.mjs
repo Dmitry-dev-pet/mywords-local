@@ -383,5 +383,6 @@ export class SpeechSequence {
  * @param {string | undefined} url
  */
 export function isLocalAudioUrl(url) {
-  return typeof url === 'string' && /^\/web\/audio\/[A-Za-z0-9_-]+\/[a-f0-9-]+\.mp3$/.test(url);
+  return typeof url === 'string' && (/^\/web\/audio\/[A-Za-z0-9_-]+\/[a-f0-9-]+\.mp3$/.test(url)
+    || /^\/api\/voice-media\/[a-z][a-z0-9_]{1,40}\/[a-f0-9-]{36}\.mp3$/.test(url));
 }
