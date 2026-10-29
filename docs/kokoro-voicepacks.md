@@ -93,51 +93,48 @@ Russian checkpoint/voice SHA-256s are stored during generation.
 
 A sample is marked `complete=false` and is **not** an installable package. Full 144-file ZIPs have been generated and verified separately.
 
-## Install an audio-only ZIP locally (draft PR #8)
+## Automatic voice delivery with the application
 
-Once a real voice has been generated and verified, package exactly the
-`manifest.json` and 144 `<uuid>.mp3` files at the ZIP root (no parent
-directory, models, weights, extra files, or symlinks). For example:
+**No user ZIP upload is necessary.** All six generated voice archives are
+committed under `data/kokoro-voicepacks-v1/<voice-id>.zip` in the **draft PR
+branch**, with fixed SHA-256s in
+[`kokoro-six-voice-receipt-2026-10-29.md`](kokoro-six-voice-receipt-2026-10-29.md).
+This is durable Git content, **not an expiring Actions artifact**.
 
-```bash
-cd /tmp/mywords-kokoro-complete/af_heart
-zip -q /tmp/mywords-af_heart.zip manifest.json ./*.mp3
-```
+When the PR is approved/merged and the ordinary `dev_auto.py` gate passes,
+the same Git checkout update delivers the six archives with the MyWords code.
+Flask automatically recognizes and fully validates each ZIP **at startup**.
+It serves individual MP3s directly from the compressed package on
+`/api/voice-media/<voice>/<phrase-id>.mp3`; it **does not download, unpack,
+install to `local_voicepacks/`, or modify `local.sqlite3`**. Every local
+MP3 is bound to its exact source phrase UUID, text hash, manifest model
+revision, and audio SHA-256. If a package is missing/corrupt, its voice stays
+unavailable rather than silently speaking with the wrong system voice.
 
-Copy the ZIP to the Android device through any preferred private transfer.
-In MyWords open **Settings → Sound → Аудиопакет ZIP**, choose the local ZIP,
-press **Проверить ZIP** to see the voice/count/size/status, and confirm
-**Установить проверенный пакет**. This needs no Internet once the ZIP
-is present. Valid packages are stored in git-ignored `local_voicepacks/`
-beside the Flask app and survive restarts. The installer:
-- accepts only the approved voice IDs for the 144 existing public starters;
-- checks complete manifest, pinned model/voice, exact source text/UUID,
-  SHA-256 and 144 MP3s **before any permanent write**;
-- rejects traversal, duplicates, symlinks, encrypted files, oversized files,
-  compression bombs and unapproved voice IDs;
-- verifies written files before atomic installation; reimporting the
-  identical package leaves files unchanged; a conflicting version is rejected;
-- never changes `local.sqlite3`, progress, islands or reviews.
+In **Settings → Sound**, English users simply choose among the three
+available voices (two US and one UK). The English study progress stays shared
+across accents. Portuguese uses its existing `tuga_voicepack` (144 MP3s)
+from `web/audio/pt-PT-kokoro-v1/`. For the three bundled Russian voices,
+the user views and accepts the included **OpenRAIL license once** before
+choosing a Russian voice for optional double-audio playback. License text
+is served from the validated local archive, not an external website.
 
-The **Kokoro English** selector offers three available voice IDs (two US,
-one UK); only **installed** choices are enabled. The **Russian Kokoro**
-selector is independent and is used for optional double-audio prompts.
-British and American audio use the **same English study progress**. Missing
-local audio is never silently replaced with a system voice after a Kokoro
-choice is made. Legacy English/Russian system speech remains available
-explicitly while installing the prerecorded packages.
+The former ZIP file picker remains in the collapsed
+**Дополнительно: ручной импорт других проверенных ZIP** section solely for
+advanced recovery/experiments. Its integrity checks, staging, idempotent
+installation and independent local storage remain intact. It is **not**
+part of ordinary app setup and must never be required to activate these
+seven prebundled voices.
 
-The already committed Portuguese pack is still served from
-`web/audio/pt-PT-kokoro-v1/`, not imported a second time. Importing an
-entirely **new collection of words/lessons**, rather than voice recordings
-for the existing 144 starter phrases, is **not implemented by this importer**.
-That remains a separate requirement of #6.
+The `main` branch and the owner's installed Android app do **not**
+automatically change merely because a draft PR contains files. This
+delivery mechanism is implemented and unit-tested in the PR, but final
+physical Android offline/lock-screen/pronunciation QA and owner approval
+for merge are separate gates. Flask still must be running in Termux.
 
-The new HTTP + ZIP tests use synthetic bytes with an MP3 header to exercise
-integrity, not to demonstrate human-audible model output. Real generated
-MP3s require full decoder validation, human listening and Android smoke.
-Flask must remain running in Termux; no work is claimed with the local
-server stopped.
+The ZIP importer remains an **audio-only importer for the existing
+144 starter thoughts**. Importing new course islands/diaries/dialogues
+from arbitrary user content is still open in #6/#7.
 
 ## Release gates
 
@@ -145,7 +142,7 @@ server stopped.
   Human pronunciation and audio-artifact review on the physical tablet remains required,
   particularly for the ten selectively compressed `af_heart` recordings.
 - All three Russian voice ZIPs bundle the pinned Dialogs **OpenRAIL** terms and
-  the installer requires explicit acceptance. License compliance in actual use
+  the UI requests explicit acceptance before selecting their voices. License compliance in actual use
   remains the recipient's responsibility. Do not upload personal texts/audio.
 - The first voice-only ZIP installer and per-voice playback are implemented;
   the general lesson content ZIP format/import remains pending in #6.
