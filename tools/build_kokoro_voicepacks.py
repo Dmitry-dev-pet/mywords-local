@@ -275,6 +275,39 @@ def synth_for_voice(voice: dict, model_info: dict):
     raise ValueError("pt-PT reuses the existing 144 recordings")
 
 
+
+def encode_voice_audio(wav: Path, mp3: Path) -> dict:
+    """Meet the original strict audio QA without weakening the Portuguese pack.
+
+    Some English Kokoro clips have a high crest factor that the Portuguese
+    encoder's bounded 3:1 compression cannot normalize to -18 LUFS without
+    hitting the true-peak ceiling. For those clips only, precompress the WAV
+    conservatively and retry the *same* strict encode+QA procedure. Record
+    each explicit fallback for downstream listening review.
+    """
+    from tools.generate_ptpt_audio import encode_audio, run
+    try:
+        return {"mode": "standard", "compression": encode_audio(wav, mp3)}
+    except ValueError:
+        pass
+    presets = [
+        ("moderate-6to1", "acompressor=threshold=0.08:ratio=6:attack=5:release=90,alimiter=limit=0.8"),
+        ("strong-10to1", "acompressor=threshold=0.03:ratio=10:attack=4:release=100,alimiter=limit=0.7"),
+        ("extreme-15to1", "acompressor=threshold=0.015:ratio=15:attack=4:release=140,alimiter=limit=0.65"),
+    ]
+    for mode, filters in presets:
+        preprocessed = wav.with_name("voice-precompressed.wav")
+        run(["ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
+             "-i", str(wav), "-af", filters, "-ar", "24000", "-ac", "1",
+             str(preprocessed)])
+        try:
+            result = encode_audio(preprocessed, mp3)
+            print(f"AUDIO_QA_FALLBACK {mp3.name} mode={mode}", flush=True)
+            return {"mode": mode, "compression": result}
+        except ValueError:
+            continue
+    raise ValueError(f"Cannot meet strict normalization even after documented compression: {mp3.name}")
+
 def generate(name: str, *, output: Path = OUTPUT, sample: int = 0) -> dict:
     voice_data = catalog()
     voice = voice_by_id(voice_data, name)
@@ -290,7 +323,7 @@ def generate(name: str, *, output: Path = OUTPUT, sample: int = 0) -> dict:
     if destination.exists():
         raise FileExistsError(f"Refusing to overwrite existing voice pack: {destination}")
     destination.parent.mkdir(parents=True, exist_ok=True)
-    from tools.generate_ptpt_audio import audio_qa, encode_audio
+    from tools.generate_ptpt_audio import audio_qa
     import numpy as np
     import soundfile as sf
 
@@ -310,9 +343,10 @@ def generate(name: str, *, output: Path = OUTPUT, sample: int = 0) -> dict:
                         or np.max(np.abs(audio)) >= 1 or np.max(np.abs(audio)) < 0.001):
                     raise ValueError("Invalid model audio")
                 sf.write(wav, audio, 24000, subtype="PCM_24")
-                encode_audio(wav, output_file)
+                preprocess = encode_voice_audio(wav, output_file)
                 qa = audio_qa(output_file)
-                entries.append({**row, **qa, "file": output_file.name,
+                entries.append({**row, **qa, "preprocess": preprocess,
+                                "file": output_file.name,
                                 "sha256": digest(output_file), "bytes": output_file.stat().st_size})
                 print(f"{name}: {index}/{len(rows)}", flush=True)
         manifest = {
