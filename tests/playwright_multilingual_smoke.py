@@ -286,23 +286,14 @@ with tempfile.TemporaryDirectory(prefix='mywords-browser-') as temp:
             # A browser with no Web Speech API at all can play the installed pack.
             absent = new_page(browser, blocked, errors, no_speech=True)
             absent.goto(URL)
-            # A new browser context has no selected island; explicitly open
-            # the already imported lesson rather than relying on page state.
-            try:
-                absent.get_by_role('heading', name='Языковые острова').wait_for(timeout=8000)
-            except Exception:
-                print('NO_SPEECH_DEBUG', {
-                    'page_url': absent.url,
-                    'page_text': absent.locator('body').inner_text(timeout=3000)[:1000],
-                    'page_errors': errors[-15:],
-                    'network_blocked': blocked[-15:],
-                    'ready_state': absent.evaluate('document.readyState'),
-                }, flush=True)
-                raise
-            absent.locator('.target-language-select').select_option('pt-PT')
-            absent.get_by_role('navigation', name='Мои острова', exact=True).get_by_role(
-                'button', name='Сёрфинг и океан', exact=True).click()
+            # This new browser context starts in Practice when islands exist.
+            # Wait until its initial English refresh has completed BEFORE
+            # changing language; otherwise two refresh requests can race.
             absent.locator('.focus-phrase').wait_for()
+            absent.locator('.target-language-select').select_option('pt-PT')
+            absent.wait_for_function(
+                "document.querySelector('.focus-phrase')?.textContent.includes('Estou a aprender')",
+                timeout=30000)
             absent.locator('.speaker-circle').click()
             wait_complete(absent)
             assert len(media_events(absent, 'ended')) == 2
