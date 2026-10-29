@@ -69,6 +69,14 @@ def create_app(database=None, voice_root=None, bundle_root=None):
         # Local catalog; only verified installed packs have usable audio URLs.
         return jsonify(voices=voice_library.voices())
 
+    @app.get('/api/voice-packs/<voice_id>/license')
+    def voice_license(voice_id):
+        # License bundled alongside verified media, readable offline.
+        document = voice_library.license_text(voice_id)
+        if document is None:
+            return jsonify(error='Лицензия голосового пакета недоступна'), 404
+        return jsonify(document)
+
     def uploaded_voice_zip():
         part = request.files.get('pack')
         if part is None:
