@@ -69,6 +69,7 @@ class VoicePackLibrary:
                             "locale": voice["locale"],
                             "entries": {e["phrase_id"]: e for e in manifest["entries"]},
                             "bundle_path": str(bundle),
+                            "license_sha256": (manifest.get("redistribution") or {}).get("license_sha256"),
                         }
                         continue
                 except (OSError, ValueError, TypeError, KeyError, zipfile.BadZipFile):
@@ -84,6 +85,7 @@ class VoicePackLibrary:
                         "manifest_hash": digest(directory / "manifest.json"),
                         "locale": voice["locale"],
                         "entries": {e["phrase_id"]: e for e in manifest["entries"]},
+                        "license_sha256": (manifest.get("redistribution") or {}).get("license_sha256"),
                     }
             except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError):
                 # An invalid/corrupt package must never be played.
@@ -98,9 +100,40 @@ class VoicePackLibrary:
         return [
             {"id": v["id"], "locale": v["locale"], "gender": v["gender"],
              "installed": (pt_ready if v["locale"] == "pt-PT" else v["id"] in installed),
-             "is_kokoro": True}
+             "is_kokoro": True, "requires_openrail": v["locale"] == "ru-RU"}
             for v in catalog()["voices"]
         ]
+
+    def license_text(self, voice_id):
+        """Serve only the verified, bundled OpenRAIL notice to local settings."""
+        with self.lock:
+            source = self.installed.get(voice_id)
+            if not source or source["locale"] != "ru-RU":
+                return None
+            expected = source.get("license_sha256")
+            bundled = source.get("bundle_path")
+        if not isinstance(expected, str) or len(expected) != 64:
+            return None
+        try:
+            if bundled:
+                path = Path(bundled)
+                if path.is_symlink() or not path.is_file():
+                    return None
+                with zipfile.ZipFile(path) as z:
+                    if z.getinfo("LICENSE-dialogs-openrail.md").file_size > 100_000:
+                        return None
+                    raw = z.read("LICENSE-dialogs-openrail.md")
+            else:
+                path = self.root / voice_id / "LICENSE-dialogs-openrail.md"
+                if path.is_symlink() or not path.is_file() or path.stat().st_size > 100_000:
+                    return None
+                raw = path.read_bytes()
+        except (OSError, RuntimeError, ValueError, KeyError, zipfile.BadZipFile):
+            return None
+        if hashlib.sha256(raw).hexdigest() != expected:
+            return None
+        return {"voice_id": voice_id, "license_sha256": expected,
+                "license_text": raw.decode("utf-8")}
 
     def for_phrase(self, phrase_id, text, locale, voice_id):
         if not isinstance(text, str) or not voice_id:
