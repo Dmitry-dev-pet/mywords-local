@@ -119,8 +119,6 @@ class VoicePackLibrary:
             raise InvalidVoicePack("ZIP отсутствует или превышает 32 МБ")
         try:
             with zipfile.ZipFile(BytesIO(archive_bytes)) as source:
-                if source.testzip() is not None:
-                    raise InvalidVoicePack("Повреждённый ZIP")
                 files = source.infolist()
                 if len(files) != EXPECTED_FILES:
                     raise InvalidVoicePack("Ожидаются manifest.json и ровно 144 MP3")
@@ -173,7 +171,8 @@ class VoicePackLibrary:
                     raise InvalidVoicePack("Аудиопакет должен содержать 144 записи")
                 expected = {row["phrase_id"]: row for row in public_rows(voice["locale"])}
                 entry_ids = [e.get("phrase_id") for e in entries if isinstance(e, dict)]
-                if len(entry_ids) != 144 or len(set(entry_ids)) != 144 or set(entry_ids) != set(expected):
+                if (len(entry_ids) != 144 or not all(isinstance(i, str) for i in entry_ids)
+                        or len(set(entry_ids)) != 144 or set(entry_ids) != set(expected)):
                     raise InvalidVoicePack("Идентификаторы фраз не совпадают")
                 expected_names = {"manifest.json"} | {f"{identifier}.mp3" for identifier in entry_ids}
                 if set(names) != expected_names:
@@ -208,7 +207,7 @@ class VoicePackLibrary:
                 return {"voice_id": name, "locale": voice["locale"],
                         "files": 144, "bytes": total_bytes,
                         "manifest_sha256": hashlib.sha256(raw_manifest).hexdigest()}
-        except (zipfile.BadZipFile, zipfile.LargeZipFile, EOFError, RuntimeError):
+        except (zipfile.BadZipFile, zipfile.LargeZipFile, EOFError, RuntimeError, OSError):
             raise InvalidVoicePack("Невозможно прочитать ZIP") from None
 
     def preview(self, archive_bytes):
