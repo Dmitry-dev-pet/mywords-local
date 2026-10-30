@@ -169,15 +169,23 @@ with tempfile.TemporaryDirectory(prefix="mywords-bundled-browser-") as tmp:
             phone.set_viewport_size({"width": 360, "height": 640})
             screenshots = Path(os.environ.get("RUNNER_TEMP", tmp)) / "mywords-mobile-ux-previews"
             screenshots.mkdir(parents=True, exist_ok=True)
+            assert phone.locator(".transport").is_hidden(), "Transport row should not clutter phone dock"
+            assert phone.locator(".playlist-actions").is_hidden(), "Playlist moves to settings"
+            assert phone.locator(".speaker-circle").is_visible(), "Single card audio button stays available"
+            assert phone.locator(".evaluation").is_visible(), "Manual ratings remain pinned"
+            assert phone.locator(".mobile-progress-nav").is_visible(), "Skips moved next to phrase counter"
             phone.screenshot(path=str(screenshots / "01-focus-360x640.png"), animations="disabled")
             phone.get_by_role("button", name="Вспомнить", exact=True).click()
             phone.get_by_role("button", name="Показать ответ", exact=True).wait_for()
             phone.screenshot(path=str(screenshots / "02-recall-before-answer-360x640.png"), animations="disabled")
             assert not phone.locator(".evaluation").is_visible(), "Recall ratings before reveal"
+            assert not phone.locator(".speaker-circle").is_visible(), "Answer audio must not spoil recall"
             hidden = mobile_layout_metrics()
             assert hidden["answer"]["bottom"] <= hidden["viewport"] + 1, hidden
             phone.get_by_role("button", name="Показать ответ", exact=True).click()
             assert phone.locator(".evaluation").is_visible()
+            assert phone.locator(".speaker-circle").is_visible(), "Answer audio available after reveal"
+            assert not phone.locator(".mobile-recall-action").is_visible(), "No redundant answer button"
             phone.screenshot(path=str(screenshots / "03-recall-with-ratings-360x640.png"), animations="disabled")
             revealed_geometry = mobile_layout_metrics()
             assert revealed_geometry["ratings"]["bottom"] <= revealed_geometry["viewport"] + 1
@@ -189,7 +197,7 @@ with tempfile.TemporaryDirectory(prefix="mywords-bundled-browser-") as tmp:
                 arg=before_phrase
             )
             assert not phone.get_by_role("button", name="Показать ответ", exact=True).is_hidden()
-            assert phone.locator(".session-subhead span:last-child").inner_text() == "2 / 18"
+            assert phone.locator(".mobile-progress-nav .mobile-count").inner_text() == "2 / 18"
             print("PASS mobile Recall: reveal → save rating → advance, no forced scrolling", flush=True)
 
             # Long phrases may scroll inside the center card, not the page or dock.
@@ -213,14 +221,14 @@ with tempfile.TemporaryDirectory(prefix="mywords-bundled-browser-") as tmp:
             phone.locator(".focus-phrase").wait_for()
             for _ in range(17):
                 phone.get_by_role("button", name="Следующее предложение").click()
-            assert phone.locator(".session-subhead span:last-child").inner_text() == "18 / 18"
+            assert phone.locator(".mobile-progress-nav .mobile-count").inner_text() == "18 / 18"
             phone.get_by_role("button", name="Вспомнить", exact=True).click()
             phone.get_by_role("button", name="Показать ответ", exact=True).click()
             phone.locator(".rating-good").click()
             phone.locator(".mobile-session-complete").wait_for()
             assert phone.get_by_text("Остров пройден!").is_visible()
             phone.get_by_role("button", name="Повторить", exact=True).click()
-            assert phone.locator(".session-subhead span:last-child").inner_text() == "1 / 18"
+            assert phone.locator(".mobile-progress-nav .mobile-count").inner_text() == "1 / 18"
             assert not phone.locator(".mobile-session-complete").is_visible()
             print("PASS last phrase shows completion, repeat restarts at first card", flush=True)
             phone.close()
