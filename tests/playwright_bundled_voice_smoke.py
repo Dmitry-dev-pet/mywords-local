@@ -206,7 +206,7 @@ with tempfile.TemporaryDirectory(prefix="mywords-bundled-browser-") as tmp:
             # Reload returns real text and leaves previously saved reviews intact.
             phone.reload()
             phone.locator(".focus-phrase").wait_for()
-            for _ in range(16):
+            for _ in range(17):
                 phone.get_by_role("button", name="Следующее предложение").click()
             assert phone.locator(".session-subhead span:last-child").inner_text() == "18 / 18"
             phone.get_by_role("button", name="Вспомнить", exact=True).click()
