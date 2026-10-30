@@ -23,9 +23,11 @@ BUNDLES = ROOT / "data" / "kokoro-voicepacks-v1"
 INIT = """(() => {
   Object.defineProperty(window, 'speechSynthesis', {configurable: true, value: undefined});
   Object.defineProperty(window, 'SpeechSynthesisUtterance', {configurable: true, value: undefined});
-  localStorage.setItem('mywords.local.practice.v1', JSON.stringify({
-    rate: 1, repeats: 1, pauseMs: 0, order: 'en', languagePauseMs: 0
-  }));
+  if (!localStorage.getItem('mywords.local.practice.v1')) {
+    localStorage.setItem('mywords.local.practice.v1', JSON.stringify({
+      rate: 1, repeats: 1, pauseMs: 0, order: 'en', languagePauseMs: 0
+    }));
+  }
   window.__mediaEvents = [];
   const originalPlay = HTMLMediaElement.prototype.play;
   HTMLMediaElement.prototype.play = function(...args) {
@@ -175,11 +177,64 @@ with tempfile.TemporaryDirectory(prefix="mywords-bundled-browser-") as tmp:
             assert phone.locator(".evaluation").is_visible(), "Manual ratings remain pinned"
             assert phone.locator(".mobile-progress-nav").is_visible(), "Skips moved next to phrase counter"
             phone.screenshot(path=str(screenshots / "01-focus-360x640.png"), animations="disabled")
+
+            # Regression: "show translation" in Focus is a persistent study
+            # preference, not a per-phrase answer reveal. Audio preferences
+            # also survive next/previous and a full browser reload.
+            assert not phone.locator(".focus-translation").is_visible()
+            phone.locator(".reveal-link").click()
+            assert phone.locator(".focus-translation").is_visible()
+            phone.get_by_role("button", name="Следующее предложение").click()
+            assert phone.locator(".focus-translation").is_visible(), (
+                "Focus translation setting must remain enabled on the next phrase"
+            )
+            phone.get_by_role("button", name="Предыдущее предложение").click()
+            assert phone.locator(".focus-translation").is_visible()
+
+            phone.get_by_role("button", name="Настройки тренировки").click()
+            phone.locator(".repeat-options").get_by_role("button", name="3×").click()
+            phone.get_by_label("Пауза между повторами").select_option("2000")
+            phone.get_by_label("Скорость воспроизведения").evaluate(
+                "(el) => { el.value = '1.25'; el.dispatchEvent(new Event('input', {bubbles:true})); }"
+            )
+            phone.get_by_role("button", name="Готово", exact=True).click()
+            phone.get_by_role("button", name="Следующее предложение").click()
+            phone.get_by_role("button", name="Настройки тренировки").click()
+            assert phone.locator(".repeat-options").get_by_role(
+                "button", name="3×"
+            ).get_attribute("class") == "selected"
+            assert phone.get_by_label("Пауза между повторами").input_value() == "2000"
+            assert phone.get_by_label("Скорость воспроизведения").input_value() == "1.25"
+            phone.get_by_role("button", name="Готово", exact=True).click()
+            phone.get_by_role("button", name="Предыдущее предложение").click()
+            assert phone.locator(".focus-translation").is_visible()
+
+            phone.reload()
+            phone.locator(".focus-phrase").wait_for()
+            assert phone.get_by_role("button", name="Фокус", exact=True).get_attribute(
+                "aria-pressed"
+            ) == "true"
+            assert phone.locator(".focus-translation").is_visible()
+            phone.get_by_role("button", name="Настройки тренировки").click()
+            assert "selected" in (
+                phone.locator(".repeat-options").get_by_role(
+                    "button", name="3×"
+                ).get_attribute("class") or ""
+            )
+            assert phone.get_by_label("Пауза между повторами").input_value() == "2000"
+            assert phone.get_by_label("Скорость воспроизведения").input_value() == "1.25"
+            phone.get_by_role("button", name="Готово", exact=True).click()
+            print("PASS Focus translation, repeats, speed and pause persist across phrases and reload",
+                  flush=True)
+
             phone.get_by_role("button", name="Вспомнить", exact=True).click()
             phone.get_by_role("button", name="Показать ответ", exact=True).wait_for()
             phone.screenshot(path=str(screenshots / "02-recall-before-answer-360x640.png"), animations="disabled")
             assert not phone.locator(".evaluation").is_visible(), "Recall ratings before reveal"
             assert not phone.locator(".speaker-circle").is_visible(), "Answer audio must not spoil recall"
+            assert not phone.locator(".focus-translation").is_visible(), (
+                "Recall must never auto-reveal a new answer just because Focus translation is enabled"
+            )
             hidden = mobile_layout_metrics()
             assert hidden["answer"]["bottom"] <= hidden["viewport"] + 1, hidden
             phone.get_by_role("button", name="Показать ответ", exact=True).click()
@@ -198,6 +253,20 @@ with tempfile.TemporaryDirectory(prefix="mywords-bundled-browser-") as tmp:
             )
             assert not phone.get_by_role("button", name="Показать ответ", exact=True).is_hidden()
             assert phone.locator(".mobile-progress-nav .mobile-count").inner_text() == "2 / 18"
+            assert not phone.locator(".focus-translation").is_visible()
+            # Re-entering Focus remembers its translation preference; returning
+            # to Recall again conceals this phrase's unattempted answer.
+            phone.get_by_role("button", name="Фокус", exact=True).click()
+            assert phone.locator(".focus-translation").is_visible()
+            phone.get_by_role("button", name="Вспомнить", exact=True).click()
+            assert not phone.locator(".focus-translation").is_visible()
+            phone.reload()
+            phone.locator(".focus-phrase").wait_for()
+            assert phone.get_by_role("button", name="Вспомнить", exact=True).get_attribute(
+                "aria-pressed"
+            ) == "true"
+            assert not phone.locator(".focus-translation").is_visible()
+            print("PASS persisted mode and Focus translation never leak Recall answers", flush=True)
             print("PASS mobile Recall: reveal → save rating → advance, no forced scrolling", flush=True)
 
             # Long phrases may scroll inside the center card, not the page or dock.
