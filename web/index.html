@@ -213,7 +213,14 @@
               </div>
               <div class="session-subhead">
                 <span>{{ mode==='focus' ? 'ТЕНЬ · СЛУШАЙ И ПОВТОРЯЙ' : 'ВСПОМНИТЬ · СКАЖИ НА ' + languageName }}</span>
-                <span>{{ currentIndex+1 }} / {{ availablePhrases.length }}</span>
+                <span class="desktop-progress-count">{{ currentIndex+1 }} / {{ availablePhrases.length }}</span>
+                <nav class="mobile-progress-nav" aria-label="Переход между фразами">
+                  <button type="button" @click="go(-1)" :disabled="currentIndex<=0"
+                          aria-label="Предыдущее предложение">‹</button>
+                  <span class="mobile-count">{{ currentIndex+1 }} / {{ availablePhrases.length }}</span>
+                  <button type="button" @click="go(1)" :disabled="currentIndex>=availablePhrases.length-1"
+                          aria-label="Следующее предложение">›</button>
+                </nav>
               </div>
               <div class="quick-controls">
                 <button type="button" @click="openEditor">☷ &nbsp;Все {{ phrases.length }}</button>
@@ -221,8 +228,12 @@
                 <button type="button" :aria-pressed="settings.order==='ru-en'" @click="toggleDualAudio">◉ &nbsp;Двойное аудио</button>
                 <button type="button" @click="openSettings('sound')">↻ &nbsp;{{ settings.repeats }}× · {{ settings.pauseMs/1000 }}с</button>
               </div>
-              <div class="focus-stage" :key="currentPhrase.id + mode">
-                <button type="button" class="speaker-circle" @click="play('phrase')" aria-label="Озвучить текущую фразу">♪</button>
+              <div class="focus-stage" :class="{'recall-stage':mode==='recall', 'answer-revealed':revealed}"
+                   :key="currentPhrase.id + mode">
+                <button type="button" class="speaker-circle"
+                        @click="playing ? stopAudio() : play('phrase')"
+                        :aria-label="playing ? 'Остановить воспроизведение' : 'Озвучить текущую фразу'"
+                        :aria-pressed="playing">{{ playing ? '■' : '♪' }}</button>
                 <p v-if="mode==='recall'" class="recall-hint">Сначала скажи ответ вслух</p>
                 <p class="focus-phrase">{{ mode==='focus' ? currentPhrase.target : currentPhrase.ru }}</p>
                 <button type="button" class="reveal-link" :aria-expanded="revealed" @click="revealed=!revealed">
@@ -438,6 +449,11 @@
           </details>
         </div>
         <div class="setting-group"><span class="setting-eyebrow">ВОСПРОИЗВЕДЕНИЕ</span>
+          <button v-if="tab==='practice' && availablePhrases.length>1"
+                  type="button" class="outline-button mobile-playlist-setting"
+                  @click="settingsOpen=false;play('island')">
+            ▶ Слушать весь остров
+          </button>
           <div class="setting-row">
             <div><strong>Повторений на предложение</strong></div>
             <div class="repeat-options" role="group" aria-label="Количество повторений">
