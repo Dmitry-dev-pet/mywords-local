@@ -232,7 +232,7 @@
                    :key="currentPhrase.id + mode">
                 <button type="button" class="speaker-circle"
                         @click="playing ? stopAudio() : play('phrase')"
-                        :aria-label="playing ? 'Остановить воспроизведение' : 'Озвучить текущую фразу'"
+                        :aria-label="playing ? 'Остановить озвучивание фразы' : 'Озвучить текущую фразу'"
                         :aria-pressed="playing">{{ playing ? '■' : '♪' }}</button>
                 <p v-if="mode==='recall'" class="recall-hint">Сначала скажи ответ вслух</p>
                 <p class="focus-phrase">{{ mode==='focus' ? currentPhrase.target : currentPhrase.ru }}</p>
