@@ -12,7 +12,7 @@
 <body>
 <div id="app" v-cloak>
   <div v-if="navOpen" class="mobile-scrim" @click="navOpen=false"></div>
-  <div class="app-layout">
+  <div class="app-layout" :class="{'mobile-practice':tab==='practice' && !!currentPhrase}">
     <aside class="app-sidebar" :class="{opened:navOpen}" aria-label="Навигация MyWords">
       <div class="brand">
         <span class="brand-mark" aria-hidden="true">M</span>
@@ -226,41 +226,59 @@
                 <p v-if="mode==='recall'" class="recall-hint">Сначала скажи ответ вслух</p>
                 <p class="focus-phrase">{{ mode==='focus' ? currentPhrase.target : currentPhrase.ru }}</p>
                 <button type="button" class="reveal-link" :aria-expanded="revealed" @click="revealed=!revealed">
-                  {{ revealed ? 'Скрыть перевод' : (mode==='focus' ? 'Нажмите, чтобы показать перевод' : 'Нажмите, чтобы увидеть перевод') }}
+                  <span class="desktop-reveal-label">{{ revealed ? 'Скрыть перевод' : (mode==='focus' ? 'Нажмите, чтобы показать перевод' : 'Нажмите, чтобы увидеть перевод') }}</span>
+                  <span class="mobile-reveal-label">{{ revealed ? 'Скрыть перевод' : 'Показать перевод' }}</span>
                 </button>
                 <p v-if="revealed" class="focus-translation">{{ mode==='focus' ? currentPhrase.ru : currentPhrase.target }}</p>
               </div>
-              <div class="transport">
-                <button type="button" class="transport-skip" @click="go(-1)" :disabled="currentIndex<=0"
-                        aria-label="Предыдущее предложение">◀◀</button>
-                <button type="button" class="transport-main" v-if="!playing" @click="play('phrase')"
-                        aria-label="Воспроизвести предложение">▶</button>
-                <button type="button" class="transport-main stop" v-else @click="stopAudio"
-                        aria-label="Остановить воспроизведение">■</button>
-                <button type="button" class="transport-skip" @click="go(1)" :disabled="currentIndex>=availablePhrases.length-1"
-                        aria-label="Следующее предложение">▶▶</button>
-              </div>
-              <p class="playback-hint" aria-live="polite">{{ paused ? 'Пауза · нажми «Продолжить»' : (audioStatus || 'НАЖМИТЕ ▶ ДЛЯ ВОСПРОИЗВЕДЕНИЯ') }}</p>
-              <div class="playlist-actions">
-                <button type="button" @click="play('island')" :disabled="playing || availablePhrases.length<2">▶ &nbsp;Слушать до конца острова</button>
-                <button v-if="playing" type="button" @click="togglePause" :aria-pressed="paused">{{ paused ? '▶ Продолжить' : 'Ⅱ Пауза' }}</button>
-                <button v-if="playing" type="button" @click="stopAudio">■ Остановить</button>
-              </div>
-              <div class="evaluation">
-                <div class="evaluation-heading"><span>Оцените свои знания</span>
-                  <small>{{ scoreLabel }} · проверок: {{ currentPhrase.review_count || 0 }}</small>
-                </div>
-                <div class="rating-actions" aria-label="Оценка воспоминания">
-                  <button type="button" class="rating-hard" @click="mark(0)">
-                    <strong>Не вспомнил</strong><small>Нужно ещё</small>
-                  </button>
-                  <button type="button" class="rating-medium" @click="mark(1)">
-                    <strong>Ещё повторю</strong><small>Почти получилось</small>
-                  </button>
-                  <button type="button" class="rating-good" @click="mark(2)">
-                    <strong>Выучил</strong><small>Знаю ответ</small>
-                  </button>
-                </div>
+              <div class="mobile-study-dock">
+                <template v-if="mobileSessionCompleted">
+                  <div class="mobile-session-complete" role="status">
+                    <strong>Остров пройден!</strong>
+                    <span>{{ availablePhrases.length }} фраз · оценки сохранены</span>
+                    <div class="mobile-finished-actions">
+                      <button type="button" class="primary" @click="restartIsland">Повторить</button>
+                      <button type="button" class="outline-button" @click="openCatalog">К островам</button>
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="transport">
+                    <button type="button" class="transport-skip" @click="go(-1)" :disabled="currentIndex<=0"
+                            aria-label="Предыдущее предложение">◀◀</button>
+                    <button type="button" class="transport-main" v-if="!playing" @click="play('phrase')"
+                            aria-label="Воспроизвести предложение">▶</button>
+                    <button type="button" class="transport-main stop" v-else @click="stopAudio"
+                            aria-label="Остановить воспроизведение">■</button>
+                    <button type="button" class="transport-skip" @click="go(1)" :disabled="currentIndex>=availablePhrases.length-1"
+                            aria-label="Следующее предложение">▶▶</button>
+                  </div>
+                  <p class="playback-hint" :class="{'mobile-idle-hint':!paused && !audioStatus}" aria-live="polite">{{ paused ? 'Пауза · нажми «Продолжить»' : (audioStatus || 'НАЖМИТЕ ▶ ДЛЯ ВОСПРОИЗВЕДЕНИЯ') }}</p>
+                  <div class="playlist-actions" :class="{'mobile-recall-playlist':mode==='recall'}">
+                    <button type="button" @click="play('island')" :disabled="playing || availablePhrases.length<2">▶ &nbsp;Слушать до конца острова</button>
+                    <button v-if="playing" type="button" @click="togglePause" :aria-pressed="paused">{{ paused ? '▶ Продолжить' : 'Ⅱ Пауза' }}</button>
+                    <button v-if="playing" type="button" @click="stopAudio">■ Остановить</button>
+                  </div>
+                  <div v-if="mode==='recall' && !revealed" class="mobile-recall-action">
+                    <button type="button" class="mobile-answer-button" @click="revealed=true">Показать ответ</button>
+                  </div>
+                  <div class="evaluation" :class="{'mobile-await-reveal':mode==='recall' && !revealed}">
+                    <div class="evaluation-heading"><span>Оцените свои знания</span>
+                      <small>{{ scoreLabel }} · проверок: {{ currentPhrase.review_count || 0 }}</small>
+                    </div>
+                    <div class="rating-actions" aria-label="Оценка воспоминания">
+                      <button type="button" class="rating-hard" :disabled="reviewSaving" @click="mark(0)">
+                        <strong>Не вспомнил</strong><small>Нужно ещё</small>
+                      </button>
+                      <button type="button" class="rating-medium" :disabled="reviewSaving" @click="mark(1)">
+                        <strong>Ещё повторю</strong><small>Почти получилось</small>
+                      </button>
+                      <button type="button" class="rating-good" :disabled="reviewSaving" @click="mark(2)">
+                        <strong>Выучил</strong><small>Знаю ответ</small>
+                      </button>
+                    </div>
+                  </div>
+                </template>
               </div>
             </template>
             <div v-else class="empty-study">
