@@ -224,11 +224,11 @@
               </div>
               <div class="quick-controls">
                 <button type="button" @click="openEditor">☷ &nbsp;Все {{ phrases.length }}</button>
-                <button type="button" :aria-pressed="revealed" @click="revealed=!revealed">文 &nbsp;Перевод</button>
+                <button type="button"  :aria-pressed="translationVisible" @click="toggleTranslation">文 &nbsp;Перевод</button>
                 <button type="button" :aria-pressed="settings.order==='ru-en'" @click="toggleDualAudio">◉ &nbsp;Двойное аудио</button>
                 <button type="button" @click="openSettings('sound')">↻ &nbsp;{{ settings.repeats }}× · {{ settings.pauseMs/1000 }}с</button>
               </div>
-              <div class="focus-stage" :class="{'recall-stage':mode==='recall', 'answer-revealed':revealed}"
+              <div class="focus-stage"  :class="{'recall-stage':mode==='recall', 'answer-revealed':translationVisible}"
                    :key="currentPhrase.id + mode">
                 <button type="button" class="speaker-circle"
                         @click="playing ? stopAudio() : play('phrase')"
@@ -236,11 +236,11 @@
                         :aria-pressed="playing">{{ playing ? '■' : '♪' }}</button>
                 <p v-if="mode==='recall'" class="recall-hint">Сначала скажи ответ вслух</p>
                 <p class="focus-phrase">{{ mode==='focus' ? currentPhrase.target : currentPhrase.ru }}</p>
-                <button type="button" class="reveal-link" :aria-expanded="revealed" @click="revealed=!revealed">
-                  <span class="desktop-reveal-label">{{ revealed ? 'Скрыть перевод' : (mode==='focus' ? 'Нажмите, чтобы показать перевод' : 'Нажмите, чтобы увидеть перевод') }}</span>
-                  <span class="mobile-reveal-label">{{ revealed ? 'Скрыть перевод' : 'Показать перевод' }}</span>
+                <button type="button" class="reveal-link"  :aria-expanded="translationVisible" @click="toggleTranslation">
+                  <span class="desktop-reveal-label">{{ translationVisible ? 'Скрыть перевод' : (mode==='focus' ? 'Нажмите, чтобы показать перевод' : 'Нажмите, чтобы увидеть перевод') }}</span>
+                  <span class="mobile-reveal-label">{{ translationVisible ? 'Скрыть перевод' : 'Показать перевод' }}</span>
                 </button>
-                <p v-if="revealed" class="focus-translation">{{ mode==='focus' ? currentPhrase.ru : currentPhrase.target }}</p>
+                <p v-if="translationVisible" class="focus-translation">{{ mode==='focus' ? currentPhrase.ru : currentPhrase.target }}</p>
               </div>
               <div class="mobile-study-dock">
                 <template v-if="mobileSessionCompleted">
