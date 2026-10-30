@@ -5,6 +5,16 @@ const SETTINGS_KEY = 'mywords.local.practice.v1';
 const LANGUAGE_KEY = 'mywords.local.target-language.v1';
 const VOICES_KEY = 'mywords.local.voices.v1';
 const KOKORO_KEY = 'mywords.local.kokoro.v1';
+const MODE_KEY = 'mywords.local.practice-mode.v1';
+const FOCUS_TRANSLATION_KEY = 'mywords.local.focus-translation.v1';
+function loadPracticeMode() {
+  try { return localStorage.getItem(MODE_KEY) === 'recall' ? 'recall' : 'focus'; }
+  catch { return 'focus'; }
+}
+function loadFocusTranslationPreference() {
+  try { return localStorage.getItem(FOCUS_TRANSLATION_KEY) === 'show'; }
+  catch { return false; }
+}
 const RU_LICENSE_KEY = 'mywords.local.kokoro-ru-license.v1';
 function ruLicensePreviouslyAccepted() {
   try { return localStorage.getItem(RU_LICENSE_KEY) === 'accepted'; }
@@ -101,8 +111,17 @@ createApp({
     const navOpen = ref(false);
     const settingsOpen = ref(false);
     const settingsTab = ref('sound');
-    const mode = ref('focus');
+    const mode = ref(loadPracticeMode());
+    // Focus's translation visibility is a study preference shared between
+    // phrases. Recall must always conceal each *new* answer before evaluation.
+    const focusTranslationVisible = ref(loadFocusTranslationPreference());
     const revealed = ref(false);
+    const translationVisible = computed(() => mode.value === 'focus'
+      ? focusTranslationVisible.value : revealed.value);
+    function toggleTranslation() {
+      if (mode.value === 'focus') focusTranslationVisible.value = !focusTranslationVisible.value;
+      else revealed.value = !revealed.value;
+    }
     const playing = ref(false);
     const paused = ref(false);
     const audioStatus = ref('');
@@ -459,6 +478,14 @@ createApp({
       revealed.value = false;
       mobileSessionCompleted.value = false;
     });
+    watch(mode, value => {
+      try { localStorage.setItem(MODE_KEY, value); } catch { /* private storage */ }
+    });
+    watch(focusTranslationVisible, value => {
+      try {
+        localStorage.setItem(FOCUS_TRANSLATION_KEY, value ? 'show' : 'hide');
+      } catch { /* private storage */ }
+    });
     watch(selectedLanguage, language => {
       try { localStorage.setItem(LANGUAGE_KEY, language); } catch { /* private storage */ }
       stopAudio();
@@ -515,7 +542,8 @@ createApp({
       selectVoiceFile, voicePackAction,
       starterText, starterInstalled, importPreset, selectedId, selectedIsland, phrases, availablePhrases,
       currentPhrase, currentIndex, practiced, mastered, scoreLabel,
-      tab, mode, revealed, playing, paused, togglePause, audioStatus, settings, navOpen, settingsOpen, settingsTab,
+      tab, mode, revealed, translationVisible, toggleTranslation, playing, paused,
+      togglePause, audioStatus, settings, navOpen, settingsOpen, settingsTab,
       mobileSessionCompleted, reviewSaving, restartIsland,
       newIsland, newRu, newTarget, editingPhraseId, translationDraft, startTranslation,
       saveTranslation, selectIsland, createIsland, addPhrase,
