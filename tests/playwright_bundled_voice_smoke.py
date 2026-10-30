@@ -167,13 +167,18 @@ with tempfile.TemporaryDirectory(prefix="mywords-bundled-browser-") as tmp:
             print("PASS no-page-scroll mobile portrait, 320x568 and short landscape; ratings docked", flush=True)
 
             phone.set_viewport_size({"width": 360, "height": 640})
+            screenshots = Path(os.environ.get("RUNNER_TEMP", tmp)) / "mywords-mobile-ux-previews"
+            screenshots.mkdir(parents=True, exist_ok=True)
+            phone.screenshot(path=str(screenshots / "01-focus-360x640.png"), animations="disabled")
             phone.get_by_role("button", name="Вспомнить", exact=True).click()
             phone.get_by_role("button", name="Показать ответ", exact=True).wait_for()
+            phone.screenshot(path=str(screenshots / "02-recall-before-answer-360x640.png"), animations="disabled")
             assert not phone.locator(".evaluation").is_visible(), "Recall ratings before reveal"
             hidden = mobile_layout_metrics()
             assert hidden["answer"]["bottom"] <= hidden["viewport"] + 1, hidden
             phone.get_by_role("button", name="Показать ответ", exact=True).click()
             assert phone.locator(".evaluation").is_visible()
+            phone.screenshot(path=str(screenshots / "03-recall-with-ratings-360x640.png"), animations="disabled")
             revealed_geometry = mobile_layout_metrics()
             assert revealed_geometry["ratings"]["bottom"] <= revealed_geometry["viewport"] + 1
 
