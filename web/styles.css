@@ -172,6 +172,8 @@ input:not([type=checkbox]):not([type=range]),textarea,select{border:1px solid #d
 
 /* Mobile study mode: one viewport, with a fixed-bottom action area.
    Only the phrase can scroll; the rest of MyWords still scrolls normally. */
+/* Preserve the desktop flex layout of transport/evaluation. */
+.mobile-study-dock{display:contents}
 .mobile-reveal-label,
 .mobile-recall-action,
 .mobile-session-complete{display:none}
