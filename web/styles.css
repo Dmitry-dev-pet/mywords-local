@@ -340,3 +340,89 @@ input:not([type=checkbox]):not([type=range]),textarea,select{border:1px solid #d
   .mobile-practice .rating-actions button{min-height:44px}
   .mobile-practice .evaluation-heading{margin-bottom:3px}
 }
+
+
+/* Mobile study v2: one task at a time. Controls in header and inside card;
+   bottom is dedicated to Reveal OR the three self-ratings, never both. */
+.mobile-progress-nav{display:none}
+.mobile-playlist-setting{display:none}
+@media(max-width:760px){
+  .mobile-practice .session-subhead{
+    justify-content:center;
+    align-items:center;
+    min-height:34px;
+  }
+  .mobile-practice .session-subhead>span:first-child,
+  .mobile-practice .desktop-progress-count{display:none}
+  .mobile-practice .mobile-progress-nav{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    font-size:12px;
+    letter-spacing:0;
+  }
+  .mobile-practice .mobile-progress-nav button{
+    min-width:42px;
+    min-height:36px;
+    font-size:24px;
+    line-height:1;
+    background:#edf3fa;
+    border:1px solid #d9e6f5;
+    color:#497aa8;
+    border-radius:10px;
+    padding:0;
+    display:grid;
+    place-items:center;
+  }
+  .mobile-practice .mobile-progress-nav .mobile-count{
+    min-width:54px;
+    text-align:center;
+    font-weight:750;
+    color:#506b8a;
+    font-size:12px;
+  }
+  .mobile-practice .focus-stage .speaker-circle{
+    display:grid;
+    width:50px;
+    height:50px;
+    min-height:50px;
+    flex:0 0 auto;
+    font-size:24px;
+    border-radius:50%;
+    margin:7px 0 2px;
+    order:3;
+  }
+  .mobile-practice .focus-stage.recall-stage:not(.answer-revealed) .speaker-circle{
+    display:none;
+  }
+  .mobile-practice .focus-stage .recall-hint{order:0}
+  .mobile-practice .focus-stage .focus-phrase{order:1}
+  .mobile-practice .focus-stage .focus-translation{order:2}
+  .mobile-practice .focus-stage .reveal-link{order:4}
+  .mobile-practice .mobile-study-dock{
+    padding-top:7px;
+    padding-bottom:2px;
+    min-height:0;
+    gap:0;
+  }
+  .mobile-practice .mobile-study-dock .transport,
+  .mobile-practice .mobile-study-dock .playback-hint,
+  .mobile-practice .mobile-study-dock .playlist-actions,
+  .mobile-practice .evaluation-heading{display:none}
+  .mobile-practice .rating-actions button{min-height:53px}
+  .mobile-practice .evaluation{padding:0}
+  .mobile-practice .mobile-recall-action{margin:0}
+  .mobile-playlist-setting{display:block;width:100%;margin:8px 0 14px;min-height:42px}
+  .mobile-practice .focus-stage{justify-content:safe center}
+}
+@media(max-width:760px) and (max-height:520px){
+  .mobile-practice .session-subhead{min-height:30px}
+  .mobile-practice .mobile-progress-nav button{min-height:30px;min-width:39px}
+  .mobile-practice .focus-stage .speaker-circle{
+    width:39px;height:39px;min-height:39px;font-size:20px;margin:0;
+  }
+  .mobile-practice .rating-actions button{min-height:43px}
+  .mobile-practice .mobile-answer-button{min-height:43px}
+}
