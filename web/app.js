@@ -5,6 +5,16 @@ const SETTINGS_KEY = 'mywords.local.practice.v1';
 const LANGUAGE_KEY = 'mywords.local.target-language.v1';
 const VOICES_KEY = 'mywords.local.voices.v1';
 const KOKORO_KEY = 'mywords.local.kokoro.v1';
+const MODE_KEY = 'mywords.local.practice-mode.v1';
+const FOCUS_TRANSLATION_KEY = 'mywords.local.focus-translation.v1';
+function loadPracticeMode() {
+  try { return localStorage.getItem(MODE_KEY) === 'recall' ? 'recall' : 'focus'; }
+  catch { return 'focus'; }
+}
+function loadFocusTranslationPreference() {
+  try { return localStorage.getItem(FOCUS_TRANSLATION_KEY) === 'show'; }
+  catch { return false; }
+}
 const RU_LICENSE_KEY = 'mywords.local.kokoro-ru-license.v1';
 function ruLicensePreviouslyAccepted() {
   try { return localStorage.getItem(RU_LICENSE_KEY) === 'accepted'; }
@@ -101,11 +111,22 @@ createApp({
     const navOpen = ref(false);
     const settingsOpen = ref(false);
     const settingsTab = ref('sound');
-    const mode = ref('focus');
+    const mode = ref(loadPracticeMode());
+    // Focus's translation visibility is a study preference shared between
+    // phrases. Recall must always conceal each *new* answer before evaluation.
+    const focusTranslationVisible = ref(loadFocusTranslationPreference());
     const revealed = ref(false);
+    const translationVisible = computed(() => mode.value === 'focus'
+      ? focusTranslationVisible.value : revealed.value);
+    function toggleTranslation() {
+      if (mode.value === 'focus') focusTranslationVisible.value = !focusTranslationVisible.value;
+      else revealed.value = !revealed.value;
+    }
     const playing = ref(false);
     const paused = ref(false);
     const audioStatus = ref('');
+    const mobileSessionCompleted = ref(false);
+    const reviewSaving = ref(false);
     const settings = ref(loadSettings());
     const newIsland = ref('');
     const newRu = ref('');
@@ -402,22 +423,45 @@ createApp({
     }
     function mark(mastery) {
       const phrase = currentPhrase.value;
-      if (!phrase) return;
+      if (!phrase || reviewSaving.value) return;
+      const language = selectedLanguage.value;
+      const island = selectedId.value;
+      reviewSaving.value = true;
       run(async () => {
         const updated = await api(`/api/phrases/${phrase.id}/review`, {
-          method: 'PATCH', body: JSON.stringify({ mastery, language: selectedLanguage.value }),
+          method: 'PATCH', body: JSON.stringify({ mastery, language }),
         });
-        // Do not jump the card: the saved score remains visible until Next.
+        // Do not display stale language scores or advance if the user switched
+        // islands, language or phrase while the review request was in flight.
+        if (selectedLanguage.value !== language || selectedId.value !== island) return;
         const row = phrases.value.find(x => x.id === phrase.id);
         if (row) { row.mastery = updated.mastery; row.review_count = updated.review_count; }
-      });
+        // Desktop keeps its existing deliberate Next-button behaviour.
+        // On a phone, commit the review *first*, then advance exactly once.
+        if (window.matchMedia('(max-width: 760px)').matches &&
+            tab.value === 'practice' && currentId.value === phrase.id) {
+          const index = availablePhrases.value.findIndex(x => x.id === phrase.id);
+          if (index >= 0 && index < availablePhrases.value.length - 1) go(1);
+          else if (index >= 0) {
+            stopAudio();
+            mobileSessionCompleted.value = true;
+          }
+        }
+      }).finally(() => { reviewSaving.value = false; });
     }
     function go(delta) {
       stopAudio();
+      mobileSessionCompleted.value = false;
       if (!availablePhrases.value.length) return;
       const index = currentIndex.value < 0 ? 0 : currentIndex.value;
       const next = Math.min(availablePhrases.value.length - 1, Math.max(0, index + delta));
       currentId.value = availablePhrases.value[next].id;
+    }
+    function restartIsland() {
+      stopAudio();
+      mobileSessionCompleted.value = false;
+      revealed.value = false;
+      currentId.value = availablePhrases.value[0]?.id || null;
     }
     function practicePhrase(id) {
       currentId.value = id;
@@ -426,9 +470,22 @@ createApp({
 
     watch(currentId, () => {
       revealed.value = false;
+      mobileSessionCompleted.value = false;
       if (!advancingFromPlayback) stopAudio();
     }, { flush: 'sync' });
-    watch([selectedId, mode, tab], () => { stopAudio(); revealed.value = false; });
+    watch([selectedId, mode, tab], () => {
+      stopAudio();
+      revealed.value = false;
+      mobileSessionCompleted.value = false;
+    });
+    watch(mode, value => {
+      try { localStorage.setItem(MODE_KEY, value); } catch { /* private storage */ }
+    });
+    watch(focusTranslationVisible, value => {
+      try {
+        localStorage.setItem(FOCUS_TRANSLATION_KEY, value ? 'show' : 'hide');
+      } catch { /* private storage */ }
+    });
     watch(selectedLanguage, language => {
       try { localStorage.setItem(LANGUAGE_KEY, language); } catch { /* private storage */ }
       stopAudio();
@@ -485,7 +542,9 @@ createApp({
       selectVoiceFile, voicePackAction,
       starterText, starterInstalled, importPreset, selectedId, selectedIsland, phrases, availablePhrases,
       currentPhrase, currentIndex, practiced, mastered, scoreLabel,
-      tab, mode, revealed, playing, paused, togglePause, audioStatus, settings, navOpen, settingsOpen, settingsTab,
+      tab, mode, revealed, translationVisible, toggleTranslation, playing, paused,
+      togglePause, audioStatus, settings, navOpen, settingsOpen, settingsTab,
+      mobileSessionCompleted, reviewSaving, restartIsland,
       newIsland, newRu, newTarget, editingPhraseId, translationDraft, startTranslation,
       saveTranslation, selectIsland, createIsland, addPhrase,
       mark, go, practicePhrase, play, stopAudio, openCatalog, openEditor, showPractice,

@@ -168,3 +168,261 @@ input:not([type=checkbox]):not([type=range]),textarea,select{border:1px solid #d
   .voice-setting select{max-width:none}
 }
 @media(max-width:480px){.target-language-select{min-width:127px;max-width:145px;font-size:11px;padding:5px}.topbar{gap:6px}.header-actions{gap:5px}}
+
+
+/* Mobile study mode: one viewport, with a fixed-bottom action area.
+   Only the phrase can scroll; the rest of MyWords still scrolls normally. */
+/* Preserve the desktop flex layout of transport/evaluation. */
+.mobile-study-dock{display:contents}
+.mobile-reveal-label,
+.mobile-recall-action,
+.mobile-session-complete{display:none}
+
+@media (max-width:760px){
+  .app-layout.mobile-practice{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100dvh;
+    min-height:0;
+    grid-template-columns:minmax(0,1fr);
+    overflow:hidden;
+    background:#f3f7fc;
+  }
+  .mobile-practice .app-content{
+    height:100%;
+    min-height:0;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    padding: max(7px, env(safe-area-inset-top)) 8px max(7px, env(safe-area-inset-bottom));
+  }
+  .mobile-practice .topbar{
+    flex:0 0 auto;
+    min-height:36px;
+    margin:0 0 6px;
+  }
+  .mobile-practice .main-grid{
+    flex:1 1 0;
+    width:100%;
+    min-height:0;
+    min-width:0;
+    grid-template-columns:minmax(0,1fr);
+  }
+  .mobile-practice .practice-surface{
+    height:100%;
+    min-height:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    padding:10px 12px 8px;
+    border-radius:16px;
+  }
+  .mobile-practice .study-toolbar{flex:0 0 auto}
+  .mobile-practice .study-tabs button{min-height:34px}
+  .mobile-practice .progress-track{flex:0 0 auto;margin:8px 0 6px}
+  .mobile-practice .session-subhead{
+    flex:0 0 auto;
+    letter-spacing:.03em;
+    font-size:9px;
+  }
+  .mobile-practice .quick-controls{display:none}
+  .mobile-practice .focus-stage{
+    flex:1 1 0;
+    min-height:0;
+    max-height:none;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+    justify-content:safe center;
+    padding:12px 4px;
+    gap:5px;
+  }
+  .mobile-practice .speaker-circle{display:none}
+  .mobile-practice .focus-phrase{
+    font-size:clamp(22px,6vw,34px);
+    line-height:1.28;
+    margin:0 0 10px;
+    max-width:100%;
+  }
+  .mobile-practice .focus-translation{font-size:clamp(16px,4.5vw,20px);line-height:1.35;margin:8px 0 0}
+  .mobile-practice .recall-hint{font-size:11px;margin:0 0 7px}
+  .mobile-practice .reveal-link{font-size:13px;min-height:36px;padding:7px 8px}
+  .mobile-practice .desktop-reveal-label{display:none}
+  .mobile-practice .mobile-reveal-label{display:inline}
+  .mobile-practice .focus-stage:has(.recall-hint) .reveal-link{display:none}
+
+  .mobile-practice .mobile-study-dock{
+    flex:0 0 auto;
+    display:flex;
+    flex-direction:column;
+    padding:8px 2px 2px;
+    border-top:1px solid #e2eaf5;
+    background:#fff;
+    gap:3px;
+  }
+  .mobile-practice .transport{margin:0;gap:24px}
+  .mobile-practice .transport-main{height:52px;width:52px;font-size:23px}
+  .mobile-practice .transport-skip{
+    height:44px;width:44px;
+    font-size:16px;color:#6388b1;background:#eef4fb;
+  }
+  .mobile-practice .playback-hint{
+    min-height:0;
+    font-size:10px;
+    line-height:1.2;
+    margin:3px 0;
+    letter-spacing:0;
+  }
+  .mobile-practice .playback-hint.mobile-idle-hint{display:none}
+  .mobile-practice .playlist-actions{
+    min-height:0;
+    margin:0;
+    gap:4px;
+  }
+  .mobile-practice .playlist-actions button{
+    min-height:32px;
+    font-size:11px;
+    padding:5px 8px;
+  }
+  .mobile-practice .playlist-actions.mobile-recall-playlist{display:none}
+  .mobile-practice .mobile-recall-action{display:block}
+  .mobile-practice .mobile-answer-button{
+    display:block;width:100%;min-height:48px;
+    background:#3186df;border:0;border-radius:12px;
+    color:#fff;font-weight:750;font-size:15px;
+  }
+  .mobile-practice .evaluation{margin-top:0;padding-top:3px}
+  .mobile-practice .evaluation.mobile-await-reveal{display:none}
+  .mobile-practice .evaluation-heading{
+    display:flex;flex-direction:row;align-items:center;
+    gap:4px;margin:0 0 6px;font-size:11px;
+  }
+  .mobile-practice .evaluation-heading small{
+    font-size:10px;text-align:right;min-width:0;
+  }
+  .mobile-practice .rating-actions{gap:6px}
+  .mobile-practice .rating-actions button{
+    min-height:49px;
+    border-radius:11px;
+    padding:6px 3px;
+  }
+  .mobile-practice .rating-actions strong{font-size:12px}
+  .mobile-practice .rating-actions small{display:none}
+  .mobile-practice .mobile-session-complete{
+    display:flex;flex-direction:column;align-items:center;
+    gap:9px;padding:11px 0;
+    text-align:center;color:#284c72;
+  }
+  .mobile-practice .mobile-session-complete strong{font-size:18px}
+  .mobile-practice .mobile-session-complete span{font-size:12px;color:#6c819a}
+  .mobile-practice .mobile-finished-actions{display:flex;gap:9px;width:100%}
+  .mobile-practice .mobile-finished-actions button{flex:1;min-height:46px}
+  .mobile-practice footer{display:none}
+}
+
+/* Short landscape phones and large browser toolbars still keep ratings visible. */
+@media (max-width:760px) and (max-height:520px){
+  .mobile-practice .app-content{padding-top:4px;padding-bottom:max(4px,env(safe-area-inset-bottom))}
+  .mobile-practice .topbar{margin-bottom:3px}
+  .mobile-practice .practice-surface{padding:5px 9px}
+  .mobile-practice .study-tabs button{min-height:29px;padding:5px}
+  .mobile-practice .progress-track{margin:4px 0}
+  .mobile-practice .session-subhead{font-size:9px}
+  .mobile-practice .focus-stage{padding:4px 3px}
+  .mobile-practice .focus-phrase{font-size:clamp(19px,4.5vw,26px);margin-bottom:4px}
+  .mobile-practice .reveal-link{min-height:28px;padding:3px}
+  .mobile-practice .mobile-study-dock{padding-top:4px}
+  .mobile-practice .transport-main{height:44px;width:44px;font-size:21px}
+  .mobile-practice .transport-skip{height:40px;width:40px}
+  .mobile-practice .playlist-actions button{min-height:27px;padding:3px}
+  .mobile-practice .rating-actions button{min-height:44px}
+  .mobile-practice .evaluation-heading{margin-bottom:3px}
+}
+
+
+/* Mobile study v2: one task at a time. Controls in header and inside card;
+   bottom is dedicated to Reveal OR the three self-ratings, never both. */
+.mobile-progress-nav{display:none}
+.mobile-playlist-setting{display:none}
+@media(max-width:760px){
+  .mobile-practice .session-subhead{
+    justify-content:center;
+    align-items:center;
+    min-height:34px;
+  }
+  .mobile-practice .session-subhead>span:first-child,
+  .mobile-practice .desktop-progress-count{display:none}
+  .mobile-practice .mobile-progress-nav{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    font-size:12px;
+    letter-spacing:0;
+  }
+  .mobile-practice .mobile-progress-nav button{
+    min-width:42px;
+    min-height:36px;
+    font-size:24px;
+    line-height:1;
+    background:#edf3fa;
+    border:1px solid #d9e6f5;
+    color:#497aa8;
+    border-radius:10px;
+    padding:0;
+    display:grid;
+    place-items:center;
+  }
+  .mobile-practice .mobile-progress-nav .mobile-count{
+    min-width:54px;
+    text-align:center;
+    font-weight:750;
+    color:#506b8a;
+    font-size:12px;
+  }
+  .mobile-practice .focus-stage .speaker-circle{
+    display:grid;
+    width:50px;
+    height:50px;
+    min-height:50px;
+    flex:0 0 auto;
+    font-size:24px;
+    border-radius:50%;
+    margin:7px 0 2px;
+    order:3;
+  }
+  .mobile-practice .focus-stage.recall-stage:not(.answer-revealed) .speaker-circle{
+    display:none;
+  }
+  .mobile-practice .focus-stage .recall-hint{order:0}
+  .mobile-practice .focus-stage .focus-phrase{order:1}
+  .mobile-practice .focus-stage .focus-translation{order:2}
+  .mobile-practice .focus-stage .reveal-link{order:4}
+  .mobile-practice .mobile-study-dock{
+    padding-top:7px;
+    padding-bottom:2px;
+    min-height:0;
+    gap:0;
+  }
+  .mobile-practice .mobile-study-dock .transport,
+  .mobile-practice .mobile-study-dock .playback-hint,
+  .mobile-practice .mobile-study-dock .playlist-actions,
+  .mobile-practice .evaluation-heading{display:none}
+  .mobile-practice .rating-actions button{min-height:53px}
+  .mobile-practice .evaluation{padding:0}
+  .mobile-practice .mobile-recall-action{margin:0}
+  .mobile-playlist-setting{display:block;width:100%;margin:8px 0 14px;min-height:42px}
+  .mobile-practice .focus-stage{justify-content:safe center}
+}
+@media(max-width:760px) and (max-height:520px){
+  .mobile-practice .session-subhead{min-height:30px}
+  .mobile-practice .mobile-progress-nav button{min-height:30px;min-width:39px}
+  .mobile-practice .focus-stage .speaker-circle{
+    width:39px;height:39px;min-height:39px;font-size:20px;margin:0;
+  }
+  .mobile-practice .rating-actions button{min-height:43px}
+  .mobile-practice .mobile-answer-button{min-height:43px}
+}
