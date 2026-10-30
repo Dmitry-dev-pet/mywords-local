@@ -4,6 +4,19 @@ import { buildPlaybackSteps, SpeechSequence } from '/web/audio-sequence.mjs';
 const SETTINGS_KEY = 'mywords.local.practice.v1';
 const LANGUAGE_KEY = 'mywords.local.target-language.v1';
 const VOICES_KEY = 'mywords.local.voices.v1';
+const KOKORO_KEY = 'mywords.local.kokoro.v1';
+const RU_LICENSE_KEY = 'mywords.local.kokoro-ru-license.v1';
+function ruLicensePreviouslyAccepted() {
+  try { return localStorage.getItem(RU_LICENSE_KEY) === 'accepted'; }
+  catch { return false; }
+}
+function loadKokoroPreferences() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(KOKORO_KEY) || '{}');
+    return { en: typeof stored.en === 'string' ? stored.en : '',
+             ru: typeof stored.ru === 'string' ? stored.ru : '' };
+  } catch { return { en: '', ru: '' }; }
+}
 function loadLanguage() {
   try { return localStorage.getItem(LANGUAGE_KEY) === 'pt-PT' ? 'pt-PT' : 'en-US'; }
   catch { return 'en-US'; }
@@ -52,6 +65,20 @@ createApp({
     const languageName = computed(() => selectedLanguage.value === 'pt-PT' ? 'Português (Portugal)' : 'English');
     const voicePreferences = ref(loadVoicePreferences());
     const voices = ref([]);
+    const voiceCatalog = ref([]);
+    const initialKokoro = loadKokoroPreferences();
+    const selectedAudioVoice = ref(initialKokoro.en);
+    const russianLicenseAccepted = ref(ruLicensePreviouslyAccepted());
+    const selectedRuVoice = ref(russianLicenseAccepted.value ? initialKokoro.ru : '');
+    const russianLicenseText = ref('');
+    const russianLicenseError = ref('');
+    const uploadedVoiceFile = ref(null);
+    const voicePackPreview = ref(null);
+    const openrailAccepted = ref(false);
+    const voicePackBusy = ref(false);
+    const voicePackMessage = ref('');
+    const englishKokoroVoices = computed(() => voiceCatalog.value.filter(v => v.locale.startsWith('en-')));
+    const russianKokoroVoices = computed(() => voiceCatalog.value.filter(v => v.locale === 'ru-RU'));
     const matchingVoices = computed(() => voices.value.filter(v =>
       v.lang?.toLowerCase().replace('_', '-') === selectedLanguage.value.toLowerCase()));
     const preferredVoice = computed(() => matchingVoices.value.find(
@@ -126,7 +153,7 @@ createApp({
       onError: code => {
         const messages = {
           unsupported: 'Синтез речи не поддерживается. Для русского предварительного чтения нужен системный русский голос; его можно выключить в настройках.',
-          'audio-missing': 'Для этой фразы или части острова нет готовой записи Kokoro pt-PT. Для личных и изменённых фраз остаётся текстовый Recall: восстановление пакета не создаёт для них записи. Состояние готового пакета — в настройках звука. Текст никуда не отправляется, pt-BR не подставляется.',
+          'audio-missing': 'Для выбранного языка или голоса нет подходящей локальной записи. Установи пакет Kokoro или выбери другой установленный голос. Текстовый Recall доступен; никаких скрытых TTS-запросов.',
           'audio-unsupported': 'Браузер не поддерживает воспроизведение аудиофайлов.',
           'audio-failed': 'Не удалось проиграть локальную запись pt-PT. Проверь аудиопакет и звук, затем нажми ▶ ещё раз. Подмена голосом pt-BR отключена.',
           'speech-stalled': 'Синтезатор речи не начал чтение. Проверь голосовой движок Android и попробуй снова.',
@@ -143,6 +170,62 @@ createApp({
         // Pack diagnostics must not prevent English or text-only practice.
         audioPack.value = null;
         audioPackError.value = true;
+      }
+    }
+    async function refreshVoiceCatalog() {
+      const payload = await api('/api/voice-packs');
+      voiceCatalog.value = payload.voices || [];
+      if (!selectedAudioVoice.value) {
+        selectedAudioVoice.value = englishKokoroVoices.value.find(v => v.installed)?.id || '';
+      }
+      if (!russianLicenseAccepted.value) selectedRuVoice.value = '';
+      else if (!selectedRuVoice.value) {
+        selectedRuVoice.value = russianKokoroVoices.value.find(v => v.installed)?.id || '';
+      }
+    }
+    async function loadRussianLicense() {
+      russianLicenseError.value = '';
+      try {
+        const voice = russianKokoroVoices.value.find(v => v.installed);
+        if (!voice) throw new Error('Русские аудиопакеты пока недоступны');
+        const document = await api('/api/voice-packs/' + encodeURIComponent(voice.id) + '/license');
+        russianLicenseText.value = document.license_text;
+      } catch (e) {
+        russianLicenseError.value = e.message || String(e);
+      }
+    }
+    function selectVoiceFile(event) {
+      uploadedVoiceFile.value = event.target.files?.[0] || null;
+      voicePackPreview.value = null;
+      openrailAccepted.value = false;
+      voicePackMessage.value = '';
+    }
+    async function voicePackAction(action) {
+      if (!uploadedVoiceFile.value || voicePackBusy.value) return;
+      voicePackBusy.value = true;
+      voicePackMessage.value = '';
+      error.value = '';
+      try {
+        const form = new FormData();
+        form.append('pack', uploadedVoiceFile.value, uploadedVoiceFile.value.name);
+        if (action === 'install' && openrailAccepted.value) form.append('accepted_openrail', 'true');
+        const response = await fetch('/api/voice-packs/' + action, { method: 'POST', body: form });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Ошибка импорта ZIP');
+        if (action === 'preview') {
+          voicePackPreview.value = result;
+          voicePackMessage.value = 'Проверен полный пакет ' + result.voice_id + ': ' + result.files + ' записей.';
+        } else {
+          voicePackPreview.value = null;
+          voicePackMessage.value = result.changed ? 'Голос установлен: ' + result.voice_id : 'Пакет уже установлен без изменений';
+          await refreshVoiceCatalog();
+          await refresh();
+        }
+      } catch (e) {
+        voicePackPreview.value = null;
+        error.value = e.message || String(e);
+      } finally {
+        voicePackBusy.value = false;
       }
     }
     function refreshVoices() {
@@ -168,6 +251,11 @@ createApp({
       const steps = buildPlaybackSteps(availablePhrases.value, {
         startIndex: currentIndex.value, scope, ...settings.value,
         language: selectedLanguage.value,
+        audioRequired: selectedLanguage.value === 'en-US' && !!selectedAudioVoice.value,
+        // If prerecorded Russian clips are installed, never silently use
+        // system TTS before accepting the bundled OpenRAIL terms.
+        ruAudioRequired: settings.value.order === 'ru-en' &&
+          (russianKokoroVoices.value.some(v => v.installed) || !!selectedRuVoice.value),
       });
       player.start(steps, settings.value.rate, preferredVoice.value);
     }
@@ -183,7 +271,9 @@ createApp({
       const id = freshIslands.some(x => x.id === preferredIsland)
         ? preferredIsland : freshIslands[0]?.id || null;
       const language = selectedLanguage.value;
-      const freshPhrases = id ? await api(`/api/islands/${id}/phrases?language=${encodeURIComponent(language)}`) : [];
+      const voiceQuery = '&voice=' + encodeURIComponent(language === 'en-US' ? selectedAudioVoice.value : '')
+        + '&ru_voice=' + encodeURIComponent(selectedRuVoice.value);
+      const freshPhrases = id ? await api(`/api/islands/${id}/phrases?language=${encodeURIComponent(language)}` + voiceQuery) : [];
       if (seq !== requestSeq || language !== selectedLanguage.value) return;
       islands.value = freshIslands;
       selectedId.value = id;
@@ -347,6 +437,18 @@ createApp({
       translationDraft.value = '';
       run(() => refresh());
     });
+    watch(russianLicenseAccepted, accepted => {
+      try { localStorage.setItem(RU_LICENSE_KEY, accepted ? 'accepted' : ''); } catch { /* storage disabled */ }
+      if (!accepted) selectedRuVoice.value = '';
+      else if (!selectedRuVoice.value) {
+        selectedRuVoice.value = russianKokoroVoices.value.find(v => v.installed)?.id || '';
+      }
+    });
+    watch([selectedAudioVoice, selectedRuVoice], ([en, ru]) => {
+      stopAudio();
+      try { localStorage.setItem(KOKORO_KEY, JSON.stringify({ en, ru })); } catch { /* storage disabled */ }
+      run(() => refresh());
+    });
     watch(voicePreferences, prefs => {
       stopAudio();
       try { localStorage.setItem(VOICES_KEY, JSON.stringify(prefs)); } catch { /* storage */ }
@@ -362,6 +464,7 @@ createApp({
       refreshAudioPack();
       window.speechSynthesis?.addEventListener?.('voiceschanged', refreshVoices);
       run(async () => {
+        await refreshVoiceCatalog();
         await refresh();
         starterPacks.value = await api('/api/starter-islands');
         if (!islands.value.length) tab.value = 'library';
@@ -376,6 +479,10 @@ createApp({
 
     return { ready, error, islands, selectedLanguage, languageName, matchingVoices,
       voicePreferences, refreshVoices, starterPacks, audioPack, audioPackError, audioPackState, importingPresetId, starterMessage,
+      voiceCatalog, englishKokoroVoices, russianKokoroVoices, selectedAudioVoice, selectedRuVoice,
+      russianLicenseAccepted, russianLicenseText, russianLicenseError, loadRussianLicense,
+      uploadedVoiceFile, voicePackPreview, voicePackBusy, voicePackMessage, openrailAccepted,
+      selectVoiceFile, voicePackAction,
       starterText, starterInstalled, importPreset, selectedId, selectedIsland, phrases, availablePhrases,
       currentPhrase, currentIndex, practiced, mastered, scoreLabel,
       tab, mode, revealed, playing, paused, togglePause, audioStatus, settings, navOpen, settingsOpen, settingsTab,

@@ -286,8 +286,14 @@ with tempfile.TemporaryDirectory(prefix='mywords-browser-') as temp:
             # A browser with no Web Speech API at all can play the installed pack.
             absent = new_page(browser, blocked, errors, no_speech=True)
             absent.goto(URL)
-            absent.locator('.target-language-select').select_option('pt-PT')
+            # This new browser context starts in Practice when islands exist.
+            # Wait until its initial English refresh has completed BEFORE
+            # changing language; otherwise two refresh requests can race.
             absent.locator('.focus-phrase').wait_for()
+            absent.locator('.target-language-select').select_option('pt-PT')
+            absent.wait_for_function(
+                "document.querySelector('.focus-phrase')?.textContent.includes('Estou a aprender')",
+                timeout=30000)
             absent.locator('.speaker-circle').click()
             wait_complete(absent)
             assert len(media_events(absent, 'ended')) == 2

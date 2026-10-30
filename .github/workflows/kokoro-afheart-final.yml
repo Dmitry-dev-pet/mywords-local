@@ -1,0 +1,43 @@
+name: Kokoro af_heart full 144-phrase generation (selective softclip)
+
+on:
+  pull_request:
+    types: [edited]
+
+permissions:
+  contents: read
+
+jobs:
+  af-heart-full:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/kokoro-all-voices-catalog' && contains(github.event.pull_request.title, '[Generate Kokoro af_heart]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned CPU Kokoro
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg espeak-ng
+          python -m pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install kokoro==0.9.4 "misaki[en]==0.9.4" soundfile numpy huggingface-hub
+      - name: Generate and verify all 144 public af_heart phrases
+        env:
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          HF_HUB_DISABLE_XET: '1'
+          OMP_NUM_THREADS: '2'
+          TOKENIZERS_PARALLELISM: 'false'
+        run: |
+          python tools/build_kokoro_voicepacks.py --generate af_heart --out "$RUNNER_TEMP/out"
+          python tools/build_kokoro_voicepacks.py --verify "$RUNNER_TEMP/out/af_heart"
+      - name: Export complete offline pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: mywords-kokoro-144-af_heart
+          path: ${{ runner.temp }}/out/af_heart/
+          retention-days: 7
+          if-no-files-found: error

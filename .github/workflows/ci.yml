@@ -66,6 +66,10 @@ jobs:
           cp node_modules/vue/dist/vue.esm-browser.prod.js web/vendor/vue.esm-browser.prod.js
       - name: Full multilingual browser smoke
         run: python tests/playwright_multilingual_smoke.py
+      - name: Offline Kokoro ZIP installer browser smoke
+        run: python tests/playwright_voicepack_smoke.py
+      - name: Auto-bundled real voice playback browser smoke
+        run: python tests/playwright_bundled_voice_smoke.py
   audit:
     runs-on: ubuntu-24.04
     steps:
