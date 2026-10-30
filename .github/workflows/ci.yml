@@ -70,6 +70,14 @@ jobs:
         run: python tests/playwright_voicepack_smoke.py
       - name: Auto-bundled real voice playback browser smoke
         run: python tests/playwright_bundled_voice_smoke.py
+      - name: Mobile UX screenshot previews (public starter phrases only)
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mywords-mobile-one-screen-previews
+          path: ${{ runner.temp }}/mywords-mobile-ux-previews/*.png
+          retention-days: 7
+          if-no-files-found: ignore
   audit:
     runs-on: ubuntu-24.04
     steps:
